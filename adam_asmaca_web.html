@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Adam Asmaca</title>
+<style>
+  :root {
+    --bg: #1e1e2f;
+    --fg: #f5f5f5;
+    --accent: #6c5ce7;
+    --correct: #00b894;
+    --wrong: #d63031;
+    --btn-bg: #2d2d44;
+    --btn-active: #44446a;
+    --wood: #8b5e34;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; justify-content: center;
+    overflow-x: hidden;
+  }
+  .oyun {
+    width: 100%; max-width: 480px;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 12px 60px;
+    min-height: 100vh;
+  }
+  .ust-bar-yer {
+    margin-top: 8px;
+  }
+  canvas#dar {
+    width: 100%; max-width: 300px; height: 260px;
+    margin: 10px 0;
+    touch-action: none;
+  }
+  .kelime {
+    font-family: "Consolas", monospace;
+    font-size: clamp(1.4rem, 6vw, 2rem);
+    font-weight: bold; color: var(--accent);
+    letter-spacing: 4px;
+    margin: 6px 0;
+    text-align: center;
+    word-break: break-all;
+  }
+  .durum {
+    min-height: 1.4em;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .sonuc {
+    font-size: 1.4rem; font-weight: bold;
+    min-height: 1.8em;
+    margin-bottom: 4px;
+  }
+  .klavye {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 420px;
+    margin-top: 8px;
+  }
+  .tus {
+    background: var(--btn-bg);
+    color: var(--fg);
+    border: none;
+    border-radius: 6px;
+    padding: 12px 0;
+    font-size: 1rem;
+    font-weight: bold;
+    box-shadow:
+      0 3px 0 #17172a,
+      0 4px 6px rgba(0,0,0,0.4);
+    transition: transform 0.05s, box-shadow 0.05s;
+    user-select: none;
+  }
+  .tus:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #17172a;
+  }
+  .tus.dogru { background: var(--correct); color: white; box-shadow: 0 3px 0 #007a5e; }
+  .tus.yanlis { background: var(--wrong); color: white; box-shadow: 0 3px 0 #8a1f1f; opacity: 0.7; }
+  .tus:disabled { pointer-events: none; }
+
+  .ust-bar {
+    display: flex; gap: 10px; margin-top: 8px;
+  }
+  .skor-kutu, .coin-kutu {
+    background: var(--btn-bg);
+    border: 3px solid #000;
+    border-radius: 6px;
+    padding: 10px 20px;
+    box-shadow:
+      inset 2px 2px 4px rgba(255,255,255,0.08),
+      3px 3px 6px rgba(0,0,0,0.5);
+    font-weight: bold; font-size: 1.1rem;
+  }
+  .skor-kutu { color: var(--accent); }
+  .coin-kutu { color: #fdcb6e; }
+
+  .ipucu-btn {
+    margin-top: 10px;
+    background: #fdcb6e;
+    color: #1e1e2f;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    box-shadow: 0 4px 0 #c9a13b, 0 6px 10px rgba(0,0,0,0.4);
+  }
+  .ipucu-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #c9a13b; }
+  .ipucu-btn:disabled { opacity: 0.5; pointer-events: none; }
+
+  .yeni-oyun-btn {
+    margin-top: 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: bold;
+    box-shadow: 0 4px 0 #4834b3, 0 6px 10px rgba(0,0,0,0.4);
+  }
+  .yeni-oyun-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #4834b3;
+  }
+
+  .imza {
+    position: fixed;
+    bottom: 8px; left: 10px;
+    font-size: 0.75rem;
+    font-style: italic;
+    color: #888;
+  }
+
+  @keyframes yanip-son {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  .yanip { animation: yanip-son 1s steps(1) infinite; }
+</style>
+</head>
+<body>
+<div class="oyun">
+  <div class="ust-bar">
+    <div class="skor-kutu">Skor: <span id="skor">0</span></div>
+    <div class="coin-kutu">🪙 <span id="coin">0</span></div>
+  </div>
+  <canvas id="dar" width="300" height="260"></canvas>
+  <div class="kelime" id="kelimeGoster"></div>
+  <div class="durum" id="durum">Bir harf seç!</div>
+  <div class="sonuc" id="sonuc"></div>
+  <button class="ipucu-btn" id="ipucuBtn">💡 İpucu (15 🪙)</button>
+  <div class="klavye" id="klavye"></div>
+  <button class="yeni-oyun-btn" id="yeniOyunBtn">🔄 Yeni Oyun</button>
+</div>
+<div class="imza">Aybars "FEYREX"</div>
+
+<script>
+const KELIMELER = [
+  "kalem","resim","deniz","bulut","kitap",
+  "masal","orman","sokak","yildiz","gunes",
+  "armut","uzum","seftali","karpuz","kavun",
+  "muz","elma","nar","incir","ceviz",
+  "findik","badem","zeytin","domates","salatalik",
+  "patlican","biber","sogan","sarimsak","havuc",
+  "patates","marul","ispanak","lahana","bezelye",
+  "mercimek","nohut","fasulye","pirinc","bugday",
+  "misir","arpa","yulaf","cay","kahve",
+  "sut","peynir","yumurta","ekmek","tereyagi",
+  "bal","recel","pasta","kek","corba",
+  "salata","kofte","pilav","doner","lahmacun"
+];
+const HARFLER = "abcçdefgğhıijklmnoöprsştuüvyz".split("");
+const MAX_YANLIS = 6;
+const WRONG = "#d63031";
+const WOOD = "#8b5e34";
+
+let kelime = "";
+let tahminEdilenler = new Set();
+let yanlisSayisi = 0;
+let skor = 0;
+let coin = 0;
+let kilitli = false;
+
+const canvas = document.getElementById("dar");
+const ctx = canvas.getContext("2d");
+const kelimeGoster = document.getElementById("kelimeGoster");
+const durumEl = document.getElementById("durum");
+const sonucEl = document.getElementById("sonuc");
+const skorEl = document.getElementById("skor");
+const coinEl = document.getElementById("coin");
+const klavyeEl = document.getElementById("klavye");
+const yeniOyunBtn = document.getElementById("yeniOyunBtn");
+const ipucuBtn = document.getElementById("ipucuBtn");
+const IPUCU_MALIYET = 15;
+
+function renkAyarla(hex, faktor) {
+  hex = hex.replace("#", "");
+  let r = parseInt(hex.substr(0,2),16),
+      g = parseInt(hex.substr(2,2),16),
+      b = parseInt(hex.substr(4,2),16);
+  if (faktor >= 0) {
+    r = r + (255-r)*faktor; g = g + (255-g)*faktor; b = b + (255-b)*faktor;
+  } else {
+    r = r*(1+faktor); g = g*(1+faktor); b = b*(1+faktor);
+  }
+  r = Math.max(0,Math.min(255,Math.round(r)));
+  g = Math.max(0,Math.min(255,Math.round(g)));
+  b = Math.max(0,Math.min(255,Math.round(b)));
+  return `rgb(${r},${g},${b})`;
+}
+
+function cizgi3d(x1,y1,x2,y2,renk,kalinlik) {
+  const golge = renkAyarla(renk, -0.45);
+  const parlak = renkAyarla(renk, 0.35);
+  ctx.lineCap = "round";
+  ctx.strokeStyle = golge; ctx.lineWidth = kalinlik + 2;
+  ctx.beginPath(); ctx.moveTo(x1+2,y1+2); ctx.lineTo(x2+2,y2+2); ctx.stroke();
+  ctx.strokeStyle = renk; ctx.lineWidth = kalinlik;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.strokeStyle = parlak; ctx.lineWidth = Math.max(1,kalinlik-2);
+  ctx.beginPath(); ctx.moveTo(x1-1,y1-1); ctx.lineTo(x2-1,y2-1); ctx.stroke();
+}
+
+function kafa3d(cx, cy, r, renk) {
+  const katman = 6;
+  for (let i = katman; i >= 1; i--) {
+    const oran = i/katman;
+    const rr = r * oran;
+    const faktor = 0.3 - (i/katman)*0.6;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rr, 0, Math.PI*2);
+    ctx.fillStyle = renkAyarla(renk, faktor);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.strokeStyle = renkAyarla(renk, -0.5);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // parlama
+  ctx.beginPath();
+  ctx.ellipse(cx - r*0.35, cy - r*0.35, r*0.22, r*0.15, -0.5, 0, Math.PI*2);
+  ctx.fillStyle = renkAyarla(renk, 0.6);
+  ctx.fill();
+}
+
+function darAgaciCiz() {
+  const w = canvas.width, h = canvas.height;
+  const olcek = Math.min(w,h)/250;
+  const ofx = (w - 250*olcek)/2;
+  const ofy = (h - 250*olcek)/2;
+  const X = v => v*olcek + ofx;
+  const Y = v => v*olcek + ofy;
+  const kalinlik = Math.max(2, Math.round(3*olcek));
+
+  ctx.clearRect(0,0,w,h);
+
+  cizgi3d(X(30),Y(230),X(150),Y(230), WOOD, kalinlik+1);
+  cizgi3d(X(60),Y(230),X(60),Y(20), WOOD, kalinlik+1);
+  cizgi3d(X(60),Y(20),X(160),Y(20), WOOD, kalinlik+1);
+  cizgi3d(X(160),Y(20),X(160),Y(50), WOOD, kalinlik+1);
+
+  if (yanlisSayisi >= 1) kafa3d(X(160), Y(75), X(185)-X(135) ? (X(185)-X(135))/2 : 25*olcek, WRONG);
+  if (yanlisSayisi >= 2) cizgi3d(X(160),Y(100),X(160),Y(160), WRONG, kalinlik);
+  if (yanlisSayisi >= 3) cizgi3d(X(160),Y(115),X(130),Y(140), WRONG, kalinlik);
+  if (yanlisSayisi >= 4) cizgi3d(X(160),Y(115),X(190),Y(140), WRONG, kalinlik);
+  if (yanlisSayisi >= 5) cizgi3d(X(160),Y(160),X(135),Y(200), WRONG, kalinlik);
+  if (yanlisSayisi >= 6) cizgi3d(X(160),Y(160),X(185),Y(200), WRONG, kalinlik);
+}
+
+function ekraniGuncelle() {
+  kelimeGoster.textContent = kelime.split("").map(h => tahminEdilenler.has(h) ? h.toUpperCase() : "_").join(" ");
+  darAgaciCiz();
+}
+
+function klavyeOlustur() {
+  klavyeEl.innerHTML = "";
+  HARFLER.forEach(harf => {
+    const btn = document.createElement("button");
+    btn.className = "tus";
+    btn.textContent = harf.toUpperCase();
+    btn.addEventListener("click", () => harfSec(harf, btn));
+    klavyeEl.appendChild(btn);
+  });
+}
+
+function harfSec(harf, btn) {
+  if (kilitli || tahminEdilenler.has(harf)) return;
+  tahminEdilenler.add(harf);
+
+  if (kelime.includes(harf)) {
+    btn.classList.add("dogru");
+    btn.disabled = true;
+    durumEl.textContent = `Doğru! '${harf.toUpperCase()}' kelimede var.`;
+    durumEl.style.color = "var(--correct)";
+    skor += 10;
+    coin += 2;
+  } else {
+    btn.classList.add("yanlis");
+    btn.disabled = true;
+    yanlisSayisi++;
+    durumEl.textContent = `Yanlış! '${harf.toUpperCase()}' kelimede yok.`;
+    durumEl.style.color = "var(--wrong)";
+    skor = Math.max(0, skor - 5);
+  }
+  skorEl.textContent = skor;
+  coinEl.textContent = coin;
+  ipucuGuncelle();
+  ekraniGuncelle();
+  oyunBittiMi();
+}
+
+function oyunBittiMi() {
+  const kazandi = kelime.split("").every(h => tahminEdilenler.has(h));
+  if (kazandi) {
+    skor += 20;
+    coin += 10;
+    skorEl.textContent = skor;
+    coinEl.textContent = coin;
+    durumEl.textContent = "Kelimeyi buldun! (+20 skor, +10 🪙)";
+    durumEl.style.color = "var(--correct)";
+    kilitli = true;
+    ipucuBtn.disabled = true;
+    sonucGoster("🎉 KAZANDIN! 🎉", "var(--correct)");
+  } else if (yanlisSayisi >= MAX_YANLIS) {
+    durumEl.textContent = `Doğru kelime: ${kelime.toUpperCase()}`;
+    durumEl.style.color = "var(--wrong)";
+    kilitli = true;
+    ipucuBtn.disabled = true;
+    sonucGoster("💀 KAYBETTİN 💀", "var(--wrong)");
+  }
+}
+
+function sonucGoster(yazi, renk) {
+  sonucEl.textContent = yazi;
+  sonucEl.style.color = renk;
+  sonucEl.classList.add("yanip");
+}
+
+function yeniOyun() {
+  kelime = KELIMELER[Math.floor(Math.random()*KELIMELER.length)];
+  tahminEdilenler = new Set();
+  yanlisSayisi = 0;
+  kilitli = false;
+  durumEl.textContent = "Bir harf seç!";
+  durumEl.style.color = "var(--fg)";
+  sonucEl.textContent = "";
+  sonucEl.classList.remove("yanip");
+  klavyeOlustur();
+  ipucuGuncelle();
+  ekraniGuncelle();
+}
+
+function ipucuGuncelle() {
+  const kalanHarfSayisi = kelime.split("").filter(h => !tahminEdilenler.has(h)).length;
+  ipucuBtn.disabled = coin < IPUCU_MALIYET || kilitli || kalanHarfSayisi === 0;
+}
+
+function ipucuKullan() {
+  if (coin < IPUCU_MALIYET || kilitli) return;
+
+  const acikOlmayanlar = kelime.split("").filter(h => !tahminEdilenler.has(h));
+  if (acikOlmayanlar.length === 0) return;
+
+  const secilenHarf = acikOlmayanlar[Math.floor(Math.random() * acikOlmayanlar.length)];
+  tahminEdilenler.add(secilenHarf);
+  coin -= IPUCU_MALIYET;
+  coinEl.textContent = coin;
+
+  // klavyedeki ilgili tuşu da doğru olarak işaretle
+  const idx = HARFLER.indexOf(secilenHarf);
+  const btn = klavyeEl.children[idx];
+  if (btn) { btn.classList.add("dogru"); btn.disabled = true; }
+
+  durumEl.textContent = `İpucu: '${secilenHarf.toUpperCase()}' harfi açıldı.`;
+  durumEl.style.color = "#fdcb6e";
+
+  ekraniGuncelle();
+  ipucuGuncelle();
+  oyunBittiMi();
+}
+
+ipucuBtn.addEventListener("click", ipucuKullan);
+
+yeniOyunBtn.addEventListener("click", yeniOyun);
+
+document.addEventListener("keydown", (e) => {
+  const harf = e.key.toLocaleLowerCase("tr-TR");
+  if (HARFLER.includes(harf)) {
+    const idx = HARFLER.indexOf(harf);
+    const btn = klavyeEl.children[idx];
+    harfSec(harf, btn);
+  }
+});
+
+window.addEventListener("resize", darAgaciCiz);
+
+yeniOyun();
+</script>
+</body>
+</html>
