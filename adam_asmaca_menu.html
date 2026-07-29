@@ -15,7 +15,7 @@
     .high-coin { position:absolute; z-index:2; top:18px; right:18px; padding:9px 13px; border:1px solid rgba(255,255,255,.14); border-radius:10px; background:rgba(30,30,47,.72); color:var(--coin); font-size:.82rem; font-weight:800; box-shadow:0 5px 16px rgba(0,0,0,.2); }
     .start-screen::before,.start-screen::after { content:''; position:absolute; width:340px; height:340px; border:2px solid rgba(108,92,231,.24); border-radius:50%; animation:orbit 8s linear infinite; }
     .start-screen::after { width:500px; height:500px; border-color:rgba(0,184,148,.15); animation-direction:reverse; animation-duration:12s; }
-    .start-card { position:relative; z-index:1; width:min(100%,420px); padding:34px 24px; border:1px solid rgba(255,255,255,.13); border-radius:25px; background:rgba(45,45,68,.78); box-shadow:0 18px 55px rgba(0,0,0,.35); backdrop-filter:blur(8px); }
+    .start-card { position:relative; z-index:1; width:min(100%,420px); padding:34px 24px; border:1px solid rgba(255,255,255,.13); border-radius:25px; background:rgba(45,45,68,.78); box-shadow:0 18px 55px rgba(0,0,0,.35); backdrop-filter:blur(8px); text-align:center; }
     .logo-mark { display:block; width:190px; height:190px; margin:-20px auto 3px; border-radius:50%; object-fit:cover; opacity:1; mix-blend-mode:screen; filter:drop-shadow(0 10px 16px rgba(0,0,0,.35)); animation:float 2.6s ease-in-out infinite; }
     .start-card h1 { margin:0; color:#fff; font-size:clamp(2.35rem,11vw,3.6rem); line-height:1; letter-spacing:-.07em; text-shadow:0 5px 18px rgba(108,92,231,.6); }
     .start-card h1 span { color:var(--accent); }
@@ -89,7 +89,7 @@
     const LETTERS = [...'abcçdefgğhıijklmnoöprsştuüvyz'];
     const MAX_WRONG = 6;
     const HINT_COST = 15;
-    const colors = { wood:'#8b5e34', wrong:'#d63031' };
+    const colors = { wood:'#8b5e34', wrong:'#d63031', skin:'#e0a878' };
     const canvas = document.querySelector('#gallows'), ctx = canvas.getContext('2d');
     const els = { score:document.querySelector('#score'), highScore:document.querySelector('#highScore'), gameHighScore:document.querySelector('#gameHighScore'), coinBadge:document.querySelector('#coinBadge'), highCoin:document.querySelector('#highCoin'), word:document.querySelector('#word'), status:document.querySelector('#status'), result:document.querySelector('#result'), keys:document.querySelector('#keys'), hintBtn:document.querySelector('#hintBtn') };
     let word, guessed, wrong, score = 0, ended, blink;
@@ -98,8 +98,29 @@
 
     function shade(hex, factor) { const n = parseInt(hex.slice(1),16), c = x => Math.round(factor >= 0 ? x+(255-x)*factor : x*(1+factor)); return '#' + [n>>16,(n>>8)&255,n&255].map(x=>c(x).toString(16).padStart(2,'0')).join(''); }
     function line3d(x1,y1,x2,y2,color,width=4) { ctx.lineCap='round'; ctx.strokeStyle=shade(color,-.45); ctx.lineWidth=width+3; ctx.beginPath();ctx.moveTo(x1+2,y1+2);ctx.lineTo(x2+2,y2+2);ctx.stroke(); ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke(); ctx.strokeStyle=shade(color,.35);ctx.lineWidth=Math.max(1,width-2);ctx.beginPath();ctx.moveTo(x1-1,y1-1);ctx.lineTo(x2-1,y2-1);ctx.stroke(); }
-    function head3d(x,y,r,color) { for(let i=6;i>0;i--) { const ratio=i/6; ctx.fillStyle=shade(color,.3-(i/6)*.6);ctx.beginPath();ctx.arc(x,y,r*ratio,0,Math.PI*2);ctx.fill(); } ctx.strokeStyle=shade(color,-.5);ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.fillStyle=shade(color,.6);ctx.beginPath();ctx.arc(x-r*.25,y-r*.3,r*.15,0,Math.PI*2);ctx.fill(); }
-    function draw() { ctx.clearRect(0,0,300,300); const w=colors.wood, r=colors.wrong; line3d(35,265,180,265,w,5);line3d(70,265,70,25,w,5);line3d(70,25,190,25,w,5);line3d(190,25,190,60,w,5); if(wrong>=1)head3d(190,88,28,r);if(wrong>=2)line3d(190,116,190,180,r);if(wrong>=3)line3d(190,132,155,160,r);if(wrong>=4)line3d(190,132,225,160,r);if(wrong>=5)line3d(190,180,160,230,r);if(wrong>=6)line3d(190,180,220,230,r); }
+    function knob3d(x,y,r,color) { ctx.fillStyle=shade(color,-.4);ctx.beginPath();ctx.arc(x+1,y+1,r,0,Math.PI*2);ctx.fill(); ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill(); ctx.fillStyle=shade(color,.5);ctx.beginPath();ctx.arc(x-r*.3,y-r*.3,r*.35,0,Math.PI*2);ctx.fill(); }
+    function ip(x1,y1,x2,y2) { ctx.strokeStyle='#c9a373'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke(); }
+    function head3d(x,y,r,color,siddet) { for(let i=6;i>0;i--) { const ratio=i/6; ctx.fillStyle=shade(color,.3-(i/6)*.6);ctx.beginPath();ctx.arc(x,y,r*ratio,0,Math.PI*2);ctx.fill(); } ctx.strokeStyle=shade(color,-.5);ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.fillStyle=shade(color,.6);ctx.beginPath();ctx.arc(x-r*.25,y-r*.3,r*.15,0,Math.PI*2);ctx.fill();
+      // yüz ifadesi (siddet arttıkça daha endişeli görünür)
+      const eyeY = y - r*0.08;
+      ctx.fillStyle = '#1e1e2f';
+      ctx.beginPath();ctx.arc(x-r*0.32, eyeY, r*0.1, 0, Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(x+r*0.32, eyeY, r*0.1, 0, Math.PI*2);ctx.fill();
+      ctx.strokeStyle = '#1e1e2f'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      const kasEgim = r*0.12 + siddet*r*0.18;
+      ctx.beginPath();ctx.moveTo(x-r*0.46, eyeY-r*0.22-siddet*r*0.05);ctx.lineTo(x-r*0.16, eyeY-r*0.22+kasEgim*0.4);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x+r*0.46, eyeY-r*0.22-siddet*r*0.05);ctx.lineTo(x+r*0.16, eyeY-r*0.22+kasEgim*0.4);ctx.stroke();
+      const agizY = y + r*0.38, kavis = -siddet*r*0.4;
+      ctx.beginPath();ctx.moveTo(x-r*0.3, agizY);ctx.quadraticCurveTo(x, agizY+kavis, x+r*0.3, agizY);ctx.stroke();
+    }
+    function draw() { ctx.clearRect(0,0,300,300); const w=colors.wood, r=colors.skin, siddet=wrong/MAX_WRONG; line3d(35,265,180,265,w,5);line3d(70,265,70,25,w,5);line3d(70,25,190,25,w,5);line3d(190,25,190,60,w,5);
+      if(wrong>=1){ ip(190,60,190,60+(88-28-60>0?88-28-60:16)); head3d(190,88,28,r,siddet); }
+      if(wrong>=2) line3d(190,116,190,180,r,12);
+      if(wrong>=3){ line3d(182,124,150,155,r,7); knob3d(150,155,6,r); }
+      if(wrong>=4){ line3d(198,124,228,155,r,7); knob3d(228,155,6,r); }
+      if(wrong>=5){ line3d(190,186,160,230,r,8); knob3d(160,230,7,r); }
+      if(wrong>=6){ line3d(190,186,220,230,r,8); knob3d(220,230,7,r); }
+    }
     function renderScore() { if(score>highScore){highScore=score;localStorage.setItem('adam-asmaca-yuksek-skor',highScore);} els.score.textContent=`Skor: ${score}`;els.highScore.textContent=`🏆 En Yüksek Skor: ${highScore}`;els.gameHighScore.textContent=`🏆 En Yüksek: ${highScore}`; }
     function renderCoin() { localStorage.setItem('adam-asmaca-coin', coin); els.coinBadge.textContent=`🪙 ${coin}`; els.highCoin.textContent=`🪙 Coin: ${coin}`; updateHintState(); }
     function updateHintState() { const kalan=[...word||''].filter(c=>!guessed.has(c)).length; els.hintBtn.disabled = ended || coin < HINT_COST || kalan === 0; }
