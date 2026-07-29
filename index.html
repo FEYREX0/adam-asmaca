@@ -30,14 +30,16 @@
     #status { min-height:24px; margin:4px 0 8px; }
     #result { min-height:34px; margin:2px 0 10px; font-size:1.45rem; font-weight:900; }
     .keys { display:grid; grid-template-columns:repeat(10,minmax(30px,1fr)); gap:6px; width:min(100%,500px); margin:5px 0 18px; }
-    .key, .new-game { border:0; border-radius:7px; color:var(--fg); font:800 1rem "Segoe UI",sans-serif; cursor:pointer; box-shadow:0 3px 0 #141420; transition:transform .12s,background .12s; }
+    .key, .new-game, .main-menu { border:0; border-radius:7px; color:var(--fg); font:800 1rem "Segoe UI",sans-serif; cursor:pointer; box-shadow:0 3px 0 #141420; transition:transform .12s,background .12s; }
     .key { min-height:39px; background:var(--button); }
-    .key:hover:not(:disabled), .new-game:hover { background:var(--button-active); transform:translateY(-1px); }
+    .key:hover:not(:disabled), .new-game:hover, .main-menu:hover { background:var(--button-active); transform:translateY(-1px); }
     .key:disabled { cursor:default; opacity:1; }
     .key.correct { background:var(--correct); }
     .key.wrong { background:var(--wrong); }
     .new-game { background:var(--accent); padding:11px 20px; font-size:1rem; }
     .new-game:hover { background:#5a4bd6; }
+    .game-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+    .main-menu { padding:11px 20px; background:var(--button); font-size:1rem; }
     footer { margin-top:auto; padding-top:18px; color:#888; font-size:.78rem; font-style:italic; }
     @media (max-width:380px) { main{padding-inline:10px}.keys{gap:4px}.key{min-height:35px;font-size:.85rem} }
   </style>
@@ -59,7 +61,10 @@
     <div id="status" aria-live="polite"></div>
     <div id="result" aria-live="assertive"></div>
     <div class="keys" id="keys" aria-label="Harfler"></div>
-    <button class="new-game" id="newGame">🔄 Yeni Oyun</button>
+    <div class="game-actions">
+      <button class="new-game" id="newGame">🔄 Yeni Oyun</button>
+      <button class="main-menu" id="mainMenu">⌂ Ana Menü</button>
+    </div>
     <footer>Aybars “FEYREX”</footer>
   </main>
   <script>
@@ -85,6 +90,7 @@
     document.addEventListener('keydown',e=>{if(document.querySelector('#startScreen').classList.contains('hidden')){const letter=e.key.toLocaleLowerCase('tr-TR');if(LETTERS.includes(letter))guess(letter);}});
     document.querySelector('#newGame').addEventListener('click',newGame);
     document.querySelector('#startGame').addEventListener('click',()=>{document.querySelector('#startScreen').classList.add('hidden');newGame();});
+    document.querySelector('#mainMenu').addEventListener('click',()=>{clearInterval(blink);document.querySelector('#startScreen').classList.remove('hidden');});
   </script>
 </body>
 </html>
