@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adam Asmaca</title>
+  <style>
+    :root { --bg:#1e1e2f; --fg:#f5f5f5; --accent:#6c5ce7; --correct:#00b894; --wrong:#d63031; --button:#2d2d44; --button-active:#44446a; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; background:radial-gradient(circle at top,#313157 0,var(--bg) 52%); color:var(--fg); font-family:"Segoe UI",Arial,sans-serif; }
+    main { width:min(100%,600px); min-height:100vh; padding:18px 18px 45px; text-align:center; display:flex; flex-direction:column; align-items:center; }
+    .score { margin:0 0 16px; padding:9px 24px; border:3px solid #171724; border-radius:9px; background:var(--button); color:var(--accent); font-size:1.1rem; font-weight:800; box-shadow:0 3px 0 #09090e; }
+    canvas { display:block; width:min(100%,330px); aspect-ratio:1; margin:0 auto 10px; }
+    #word { min-height:48px; margin:8px 0; color:var(--accent); font-family:Consolas,monospace; font-weight:800; font-size:clamp(1.4rem,7vw,2.2rem); letter-spacing:.08em; word-break:break-all; }
+    #status { min-height:24px; margin:4px 0 8px; }
+    #result { min-height:34px; margin:2px 0 10px; font-size:1.45rem; font-weight:900; }
+    .keys { display:grid; grid-template-columns:repeat(10,minmax(30px,1fr)); gap:6px; width:min(100%,500px); margin:5px 0 18px; }
+    .key, .new-game { border:0; border-radius:7px; color:var(--fg); font:800 1rem "Segoe UI",sans-serif; cursor:pointer; box-shadow:0 3px 0 #141420; transition:transform .12s,background .12s; }
+    .key { min-height:39px; background:var(--button); }
+    .key:hover:not(:disabled), .new-game:hover { background:var(--button-active); transform:translateY(-1px); }
+    .key:disabled { cursor:default; opacity:1; }
+    .key.correct { background:var(--correct); }
+    .key.wrong { background:var(--wrong); }
+    .new-game { background:var(--accent); padding:11px 20px; font-size:1rem; }
+    .new-game:hover { background:#5a4bd6; }
+    footer { margin-top:auto; padding-top:18px; color:#888; font-size:.78rem; font-style:italic; }
+    @media (max-width:380px) { main{padding-inline:10px}.keys{gap:4px}.key{min-height:35px;font-size:.85rem} }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="score" id="score">Skor: 0</div>
+    <canvas id="gallows" width="300" height="300" aria-label="Adam asmaca çizimi"></canvas>
+    <div id="word" aria-live="polite"></div>
+    <div id="status" aria-live="polite"></div>
+    <div id="result" aria-live="assertive"></div>
+    <div class="keys" id="keys" aria-label="Harfler"></div>
+    <button class="new-game" id="newGame">🔄 Yeni Oyun</button>
+    <footer>Aybars “FEYREX”</footer>
+  </main>
+  <script>
+    const WORDS = [
+      'kalem','resim','deniz','bulut','kitap','masal','orman','sokak','yıldız','güneş','oyuncu','bilgisayar','telefon','araba','evcil','müzik','film','spor','tatil','yemek','sanat','eğitim','bilim','teknoloji','moda','hayvan','bitki','gezegen','uzay','tarih','dostluk','sevgi','mutluluk','huzur','cesaret','hayal','gerçek','macera','oyun','eğlence','dünya','kültür','sağlık','patlıcan','biber','soğan','sarımsak','havuç','patates','marul','ıspanak','lahana','bezelye','mercimek','nohut','fasulye','pirinç','buğday','mısır','arpa','yulaf','çay','kahve','süt','peynir','yumurta','ekmek','tereyağı','bal','reçel','pasta','kek','çorba','salata','köfte','pilav','döner','lahmacun'
+    ];
+    const LETTERS = [...'abcçdefgğhıijklmnoöprsştuüvyz'];
+    const MAX_WRONG = 6;
+    const colors = { wood:'#8b5e34', wrong:'#d63031' };
+    const canvas = document.querySelector('#gallows'), ctx = canvas.getContext('2d');
+    const els = { score:document.querySelector('#score'), word:document.querySelector('#word'), status:document.querySelector('#status'), result:document.querySelector('#result'), keys:document.querySelector('#keys') };
+    let word, guessed, wrong, score = 0, ended, blink;
+
+    function shade(hex, factor) { const n = parseInt(hex.slice(1),16), c = x => Math.round(factor >= 0 ? x+(255-x)*factor : x*(1+factor)); return '#' + [n>>16,(n>>8)&255,n&255].map(x=>c(x).toString(16).padStart(2,'0')).join(''); }
+    function line3d(x1,y1,x2,y2,color,width=4) { ctx.lineCap='round'; ctx.strokeStyle=shade(color,-.45); ctx.lineWidth=width+3; ctx.beginPath();ctx.moveTo(x1+2,y1+2);ctx.lineTo(x2+2,y2+2);ctx.stroke(); ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke(); ctx.strokeStyle=shade(color,.35);ctx.lineWidth=Math.max(1,width-2);ctx.beginPath();ctx.moveTo(x1-1,y1-1);ctx.lineTo(x2-1,y2-1);ctx.stroke(); }
+    function head3d(x,y,r,color) { for(let i=6;i>0;i--) { const ratio=i/6; ctx.fillStyle=shade(color,.3-(i/6)*.6);ctx.beginPath();ctx.arc(x,y,r*ratio,0,Math.PI*2);ctx.fill(); } ctx.strokeStyle=shade(color,-.5);ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.fillStyle=shade(color,.6);ctx.beginPath();ctx.arc(x-r*.25,y-r*.3,r*.15,0,Math.PI*2);ctx.fill(); }
+    function draw() { ctx.clearRect(0,0,300,300); const w=colors.wood, r=colors.wrong; line3d(35,265,180,265,w,5);line3d(70,265,70,25,w,5);line3d(70,25,190,25,w,5);line3d(190,25,190,60,w,5); if(wrong>=1)head3d(190,88,28,r);if(wrong>=2)line3d(190,116,190,180,r);if(wrong>=3)line3d(190,132,155,160,r);if(wrong>=4)line3d(190,132,225,160,r);if(wrong>=5)line3d(190,180,160,230,r);if(wrong>=6)line3d(190,180,220,230,r); }
+    function update() { els.word.textContent=[...word].map(c=>guessed.has(c)?c.toLocaleUpperCase('tr-TR'):'_').join(' '); els.score.textContent=`Skor: ${score}`; draw(); }
+    function finish(win) { ended=true; document.querySelectorAll('.key').forEach(b=>b.disabled=true); if(win){score+=20;els.score.textContent=`Skor: ${score}`;els.status.textContent='Kelimeyi buldun! (+20 bonus)';els.status.style.color='var(--correct)';flash('🎉 KAZANDIN! 🎉','var(--correct)');} else {els.status.textContent=`Doğru kelime: ${word.toLocaleUpperCase('tr-TR')}`;els.status.style.color='var(--wrong)';flash('💀 KAYBETTİN 💀','var(--wrong)');} }
+    function flash(text,color) { clearInterval(blink); let on=false; blink=setInterval(()=>{on=!on;els.result.textContent=on?text:'';els.result.style.color=color;},500); }
+    function guess(letter) { if(ended||guessed.has(letter))return; guessed.add(letter); const button=document.querySelector(`[data-letter="${letter}"]`);button.disabled=true; if([...word].includes(letter)){button.classList.add('correct');els.status.textContent=`Doğru! '${letter.toLocaleUpperCase('tr-TR')}' kelimede var.`;els.status.style.color='var(--correct)';score+=10;}else{button.classList.add('wrong');els.status.textContent=`Yanlış! '${letter.toLocaleUpperCase('tr-TR')}' kelimede yok.`;els.status.style.color='var(--wrong)';wrong++;score=Math.max(0,score-5);} update(); if([...word].every(c=>guessed.has(c)))finish(true);else if(wrong>=MAX_WRONG)finish(false); }
+    function newGame() { clearInterval(blink);word=WORDS[Math.floor(Math.random()*WORDS.length)];guessed=new Set();wrong=0;ended=false;els.result.textContent='';els.status.textContent='Bir harf seç!';els.status.style.color='var(--fg)';els.keys.innerHTML=''; LETTERS.forEach(letter=>{const b=document.createElement('button');b.className='key';b.dataset.letter=letter;b.textContent=letter.toLocaleUpperCase('tr-TR');b.addEventListener('click',()=>guess(letter));els.keys.append(b);});update(); }
+    document.addEventListener('keydown',e=>{const letter=e.key.toLocaleLowerCase('tr-TR');if(LETTERS.includes(letter))guess(letter);});
+    document.querySelector('#newGame').addEventListener('click',newGame);newGame();
+  </script>
+</body>
+</html>
