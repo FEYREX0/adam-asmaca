@@ -11,6 +11,7 @@
     main { width:min(100%,600px); min-height:100vh; padding:18px 18px 45px; text-align:center; display:flex; flex-direction:column; align-items:center; }
     .start-screen { position:fixed; z-index:5; inset:0; display:grid; place-items:center; padding:24px; overflow:hidden; background:radial-gradient(circle at 50% 25%,#44427a 0,#24243d 40%,var(--bg) 78%); transition:opacity .45s ease,visibility .45s ease; }
     .start-screen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+    .high-score { position:absolute; z-index:2; top:18px; left:18px; padding:9px 13px; border:1px solid rgba(255,255,255,.14); border-radius:10px; background:rgba(30,30,47,.72); color:#ffeaa7; font-size:.82rem; font-weight:800; box-shadow:0 5px 16px rgba(0,0,0,.2); }
     .start-screen::before,.start-screen::after { content:''; position:absolute; width:340px; height:340px; border:2px solid rgba(108,92,231,.24); border-radius:50%; animation:orbit 8s linear infinite; }
     .start-screen::after { width:500px; height:500px; border-color:rgba(0,184,148,.15); animation-direction:reverse; animation-duration:12s; }
     .start-card { position:relative; z-index:1; width:min(100%,420px); padding:34px 24px; border:1px solid rgba(255,255,255,.13); border-radius:25px; background:rgba(45,45,68,.78); box-shadow:0 18px 55px rgba(0,0,0,.35); backdrop-filter:blur(8px); }
@@ -46,6 +47,7 @@
 </head>
 <body>
   <section class="start-screen" id="startScreen" aria-label="Oyun başlangıcı">
+    <div class="high-score" id="highScore">🏆 En Yüksek Skor: 0</div>
     <div class="start-card">
       <img class="logo-mark" src="feyrex-logo.png" alt="FEYREX logosu">
       <h1>Adam <span>Asmaca</span></h1>
@@ -75,15 +77,17 @@
     const MAX_WRONG = 6;
     const colors = { wood:'#8b5e34', wrong:'#d63031' };
     const canvas = document.querySelector('#gallows'), ctx = canvas.getContext('2d');
-    const els = { score:document.querySelector('#score'), word:document.querySelector('#word'), status:document.querySelector('#status'), result:document.querySelector('#result'), keys:document.querySelector('#keys') };
+    const els = { score:document.querySelector('#score'), highScore:document.querySelector('#highScore'), word:document.querySelector('#word'), status:document.querySelector('#status'), result:document.querySelector('#result'), keys:document.querySelector('#keys') };
     let word, guessed, wrong, score = 0, ended, blink;
+    let highScore = Number(localStorage.getItem('adam-asmaca-yuksek-skor')) || 0;
 
     function shade(hex, factor) { const n = parseInt(hex.slice(1),16), c = x => Math.round(factor >= 0 ? x+(255-x)*factor : x*(1+factor)); return '#' + [n>>16,(n>>8)&255,n&255].map(x=>c(x).toString(16).padStart(2,'0')).join(''); }
     function line3d(x1,y1,x2,y2,color,width=4) { ctx.lineCap='round'; ctx.strokeStyle=shade(color,-.45); ctx.lineWidth=width+3; ctx.beginPath();ctx.moveTo(x1+2,y1+2);ctx.lineTo(x2+2,y2+2);ctx.stroke(); ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke(); ctx.strokeStyle=shade(color,.35);ctx.lineWidth=Math.max(1,width-2);ctx.beginPath();ctx.moveTo(x1-1,y1-1);ctx.lineTo(x2-1,y2-1);ctx.stroke(); }
     function head3d(x,y,r,color) { for(let i=6;i>0;i--) { const ratio=i/6; ctx.fillStyle=shade(color,.3-(i/6)*.6);ctx.beginPath();ctx.arc(x,y,r*ratio,0,Math.PI*2);ctx.fill(); } ctx.strokeStyle=shade(color,-.5);ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.fillStyle=shade(color,.6);ctx.beginPath();ctx.arc(x-r*.25,y-r*.3,r*.15,0,Math.PI*2);ctx.fill(); }
     function draw() { ctx.clearRect(0,0,300,300); const w=colors.wood, r=colors.wrong; line3d(35,265,180,265,w,5);line3d(70,265,70,25,w,5);line3d(70,25,190,25,w,5);line3d(190,25,190,60,w,5); if(wrong>=1)head3d(190,88,28,r);if(wrong>=2)line3d(190,116,190,180,r);if(wrong>=3)line3d(190,132,155,160,r);if(wrong>=4)line3d(190,132,225,160,r);if(wrong>=5)line3d(190,180,160,230,r);if(wrong>=6)line3d(190,180,220,230,r); }
-    function update() { els.word.textContent=[...word].map(c=>guessed.has(c)?c.toLocaleUpperCase('tr-TR'):'_').join(' '); els.score.textContent=`Skor: ${score}`; draw(); }
-    function finish(win) { ended=true; document.querySelectorAll('.key').forEach(b=>b.disabled=true); if(win){score+=20;els.score.textContent=`Skor: ${score}`;els.status.textContent='Kelimeyi buldun! (+20 bonus)';els.status.style.color='var(--correct)';flash('🎉 KAZANDIN! 🎉','var(--correct)');} else {els.status.textContent=`Doğru kelime: ${word.toLocaleUpperCase('tr-TR')}`;els.status.style.color='var(--wrong)';flash('💀 KAYBETTİN 💀','var(--wrong)');} }
+    function renderScore() { if(score>highScore){highScore=score;localStorage.setItem('adam-asmaca-yuksek-skor',highScore);} els.score.textContent=`Skor: ${score}`;els.highScore.textContent=`🏆 En Yüksek Skor: ${highScore}`; }
+    function update() { els.word.textContent=[...word].map(c=>guessed.has(c)?c.toLocaleUpperCase('tr-TR'):'_').join(' '); renderScore(); draw(); }
+    function finish(win) { ended=true; document.querySelectorAll('.key').forEach(b=>b.disabled=true); if(win){score+=20;renderScore();els.status.textContent='Kelimeyi buldun! (+20 bonus)';els.status.style.color='var(--correct)';flash('🎉 KAZANDIN! 🎉','var(--correct)');} else {els.status.textContent=`Doğru kelime: ${word.toLocaleUpperCase('tr-TR')}`;els.status.style.color='var(--wrong)';flash('💀 KAYBETTİN 💀','var(--wrong)');} }
     function flash(text,color) { clearInterval(blink); let on=false; blink=setInterval(()=>{on=!on;els.result.textContent=on?text:'';els.result.style.color=color;},500); }
     function guess(letter) { if(ended||guessed.has(letter))return; guessed.add(letter); const button=document.querySelector(`[data-letter="${letter}"]`);button.disabled=true; if([...word].includes(letter)){button.classList.add('correct');els.status.textContent=`Doğru! '${letter.toLocaleUpperCase('tr-TR')}' kelimede var.`;els.status.style.color='var(--correct)';score+=10;}else{button.classList.add('wrong');els.status.textContent=`Yanlış! '${letter.toLocaleUpperCase('tr-TR')}' kelimede yok.`;els.status.style.color='var(--wrong)';wrong++;score=Math.max(0,score-5);} update(); if([...word].every(c=>guessed.has(c)))finish(true);else if(wrong>=MAX_WRONG)finish(false); }
     function newGame() { clearInterval(blink);word=WORDS[Math.floor(Math.random()*WORDS.length)];guessed=new Set();wrong=0;ended=false;els.result.textContent='';els.status.textContent='Bir harf seç!';els.status.style.color='var(--fg)';els.keys.innerHTML=''; LETTERS.forEach(letter=>{const b=document.createElement('button');b.className='key';b.dataset.letter=letter;b.textContent=letter.toLocaleUpperCase('tr-TR');b.addEventListener('click',()=>guess(letter));els.keys.append(b);});update(); }
@@ -91,6 +95,7 @@
     document.querySelector('#newGame').addEventListener('click',newGame);
     document.querySelector('#startGame').addEventListener('click',()=>{document.querySelector('#startScreen').classList.add('hidden');newGame();});
     document.querySelector('#mainMenu').addEventListener('click',()=>{clearInterval(blink);document.querySelector('#startScreen').classList.remove('hidden');});
+    renderScore();
   </script>
 </body>
 </html>
