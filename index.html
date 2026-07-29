@@ -9,6 +9,21 @@
     * { box-sizing:border-box; }
     body { margin:0; min-height:100vh; display:grid; place-items:center; background:radial-gradient(circle at top,#313157 0,var(--bg) 52%); color:var(--fg); font-family:"Segoe UI",Arial,sans-serif; }
     main { width:min(100%,600px); min-height:100vh; padding:18px 18px 45px; text-align:center; display:flex; flex-direction:column; align-items:center; }
+    .start-screen { position:fixed; z-index:5; inset:0; display:grid; place-items:center; padding:24px; overflow:hidden; background:radial-gradient(circle at 50% 25%,#44427a 0,#24243d 40%,var(--bg) 78%); transition:opacity .45s ease,visibility .45s ease; }
+    .start-screen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+    .start-screen::before,.start-screen::after { content:''; position:absolute; width:340px; height:340px; border:2px solid rgba(108,92,231,.24); border-radius:50%; animation:orbit 8s linear infinite; }
+    .start-screen::after { width:500px; height:500px; border-color:rgba(0,184,148,.15); animation-direction:reverse; animation-duration:12s; }
+    .start-card { position:relative; z-index:1; width:min(100%,420px); padding:34px 24px; border:1px solid rgba(255,255,255,.13); border-radius:25px; background:rgba(45,45,68,.78); box-shadow:0 18px 55px rgba(0,0,0,.35); backdrop-filter:blur(8px); }
+    .logo-mark { display:block; width:190px; height:190px; margin:-20px auto 3px; border-radius:50%; object-fit:cover; opacity:1; mix-blend-mode:screen; filter:drop-shadow(0 10px 16px rgba(0,0,0,.35)); animation:float 2.6s ease-in-out infinite; }
+    .start-card h1 { margin:0; color:#fff; font-size:clamp(2.35rem,11vw,3.6rem); line-height:1; letter-spacing:-.07em; text-shadow:0 5px 18px rgba(108,92,231,.6); }
+    .start-card h1 span { color:var(--accent); }
+    .start-card p { margin:18px auto 26px; max-width:290px; color:#d5d4e3; line-height:1.55; }
+    .producer { margin:20px 0 0; color:#aaa8bd; font-size:.82rem; font-style:italic; }
+    .start-button { display:block; width:min(100%,260px); margin:0 auto; padding:14px 20px; border:0; border-radius:12px; background:linear-gradient(135deg,#7d6df0,var(--accent)); color:#fff; font:800 1.12rem "Segoe UI",sans-serif; cursor:pointer; box-shadow:0 5px 0 #4436a2,0 12px 22px rgba(0,0,0,.25); transition:transform .15s,filter .15s; }
+    .start-button:hover { transform:translateY(-2px); filter:brightness(1.1); }
+    .start-button:active { transform:translateY(3px); box-shadow:0 2px 0 #4436a2; }
+    @keyframes float { 50% { transform:translateY(-9px) rotate(4deg); } }
+    @keyframes orbit { to { transform:rotate(360deg); } }
     .score { margin:0 0 16px; padding:9px 24px; border:3px solid #171724; border-radius:9px; background:var(--button); color:var(--accent); font-size:1.1rem; font-weight:800; box-shadow:0 3px 0 #09090e; }
     canvas { display:block; width:min(100%,330px); aspect-ratio:1; margin:0 auto 10px; }
     #word { min-height:48px; margin:8px 0; color:var(--accent); font-family:Consolas,monospace; font-weight:800; font-size:clamp(1.4rem,7vw,2.2rem); letter-spacing:.08em; word-break:break-all; }
@@ -28,6 +43,15 @@
   </style>
 </head>
 <body>
+  <section class="start-screen" id="startScreen" aria-label="Oyun başlangıcı">
+    <div class="start-card">
+      <img class="logo-mark" src="assets/feyrex-logo.png" alt="FEYREX logosu">
+      <h1>Adam <span>Asmaca</span></h1>
+      <p>Harfleri tahmin et, kelimeyi tamamla ve darağacından önce kazan.</p>
+      <button class="start-button" id="startGame">▶ Oyuna Başla</button>
+      <div class="producer">Yapımcı: Aybars “FEYREX”</div>
+    </div>
+  </section>
   <main>
     <div class="score" id="score">Skor: 0</div>
     <canvas id="gallows" width="300" height="300" aria-label="Adam asmaca çizimi"></canvas>
@@ -58,8 +82,9 @@
     function flash(text,color) { clearInterval(blink); let on=false; blink=setInterval(()=>{on=!on;els.result.textContent=on?text:'';els.result.style.color=color;},500); }
     function guess(letter) { if(ended||guessed.has(letter))return; guessed.add(letter); const button=document.querySelector(`[data-letter="${letter}"]`);button.disabled=true; if([...word].includes(letter)){button.classList.add('correct');els.status.textContent=`Doğru! '${letter.toLocaleUpperCase('tr-TR')}' kelimede var.`;els.status.style.color='var(--correct)';score+=10;}else{button.classList.add('wrong');els.status.textContent=`Yanlış! '${letter.toLocaleUpperCase('tr-TR')}' kelimede yok.`;els.status.style.color='var(--wrong)';wrong++;score=Math.max(0,score-5);} update(); if([...word].every(c=>guessed.has(c)))finish(true);else if(wrong>=MAX_WRONG)finish(false); }
     function newGame() { clearInterval(blink);word=WORDS[Math.floor(Math.random()*WORDS.length)];guessed=new Set();wrong=0;ended=false;els.result.textContent='';els.status.textContent='Bir harf seç!';els.status.style.color='var(--fg)';els.keys.innerHTML=''; LETTERS.forEach(letter=>{const b=document.createElement('button');b.className='key';b.dataset.letter=letter;b.textContent=letter.toLocaleUpperCase('tr-TR');b.addEventListener('click',()=>guess(letter));els.keys.append(b);});update(); }
-    document.addEventListener('keydown',e=>{const letter=e.key.toLocaleLowerCase('tr-TR');if(LETTERS.includes(letter))guess(letter);});
-    document.querySelector('#newGame').addEventListener('click',newGame);newGame();
+    document.addEventListener('keydown',e=>{if(document.querySelector('#startScreen').classList.contains('hidden')){const letter=e.key.toLocaleLowerCase('tr-TR');if(LETTERS.includes(letter))guess(letter);}});
+    document.querySelector('#newGame').addEventListener('click',newGame);
+    document.querySelector('#startGame').addEventListener('click',()=>{document.querySelector('#startScreen').classList.add('hidden');newGame();});
   </script>
 </body>
 </html>
