@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14142a">
+<title>Adam Asmaca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg0:#0e0e20; --bg1:#1a1a36; --ink:#f4f3ff; --muted:#a9a7c9;
+    --accent:#7c6cff; --accent-l:#b6acff; --good:#1fdcae; --bad:#ff5a5f; --gold:#ffd166;
+    --glass:rgba(255,255,255,.07); --stroke:rgba(255,255,255,.13);
+    --font:"Fredoka","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none!important}
+  html,body{margin:0}
+  body{
+    min-height:100vh; min-height:100dvh; font-family:var(--font); color:var(--ink);
+    background:
+      radial-gradient(900px 500px at 12% -10%,rgba(124,108,255,.35),transparent 60%),
+      radial-gradient(800px 500px at 100% 8%,rgba(31,220,174,.15),transparent 55%),
+      linear-gradient(180deg,var(--bg1),var(--bg0));
+    background-attachment:fixed; overflow-x:hidden;
+  }
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
+  /* ---------- coin ikonu ---------- */
+  .coin{display:inline-block;width:1.1em;height:1.1em;border-radius:50%;position:relative;vertical-align:-.18em;
+    background:radial-gradient(circle at 35% 30%,#fff3b0,#ffd166 45%,#e09f1f 100%);
+    box-shadow:inset 0 0 0 .1em rgba(160,100,0,.55),0 1px 3px rgba(0,0,0,.45)}
+  .coin::after{content:'';position:absolute;inset:27%;border-radius:50%;border:.09em solid rgba(150,90,0,.5)}
+
+  /* ---------- ana sayfa ---------- */
+  main{width:min(100%,560px);margin:0 auto;min-height:100vh;min-height:100dvh;
+    padding:max(12px,env(safe-area-inset-top)) 14px calc(44px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;align-items:center;gap:12px}
+
+  .hud{width:100%;display:flex;gap:8px;align-items:stretch}
+  .chips{flex:1;display:flex;gap:8px;min-width:0}
+  .chip{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;
+    padding:7px 8px;border-radius:14px;background:var(--glass);border:1px solid var(--stroke);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    box-shadow:0 6px 18px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08)}
+  .chip small{font-size:.62rem;letter-spacing:.14em;color:var(--muted);font-weight:600}
+  .chip b{font-size:1.28rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
+  .chip.score b{color:var(--accent-l)}
+  .chip.best b{color:#ffe8a3}
+  .chip.coinchip b{color:var(--gold)}
+  .chip.bump b{animation:bump .38s}
+  @keyframes bump{40%{transform:scale(1.28)}}
+  .icon-btn{width:50px;border-radius:14px;border:1px solid var(--stroke);background:var(--glass);display:grid;place-items:center;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 6px 18px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08);
+    transition:transform .1s,background .15s}
+  .icon-btn:hover{background:rgba(255,255,255,.13)}
+  .icon-btn:active{transform:scale(.94)}
+  .icon-btn svg{width:22px;height:22px;fill:currentColor}
+
+  .scene{position:relative;width:min(100%,390px);border-radius:24px;overflow:hidden;border:1px solid var(--stroke);
+    box-shadow:0 20px 44px rgba(0,0,0,.5),0 0 0 5px rgba(255,255,255,.03)}
+  .scene canvas{display:block;width:100%;aspect-ratio:320/340}
+  .scene.shake{animation:shake .4s}
+  @keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+  .lives{position:absolute;left:10px;top:10px;display:flex;gap:3px;padding:6px 9px;border-radius:999px;
+    background:rgba(10,10,30,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14)}
+  .heart{width:17px;height:17px;transition:transform .35s,opacity .35s,filter .35s;filter:drop-shadow(0 0 4px rgba(255,90,95,.75))}
+  .heart.lost{opacity:.25;transform:scale(.78);filter:grayscale(1)}
+
+  /* ---------- kelime kutuları ---------- */
+  .word{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(4px,1.5vw,8px);min-height:60px;padding:4px 6px;perspective:600px}
+  .tile{position:relative;width:clamp(28px,8.4vw,44px);height:clamp(40px,11.4vw,58px);border-radius:11px;display:grid;place-items:center;
+    background:linear-gradient(180deg,#33335b,#25254a);border:1px solid rgba(255,255,255,.08);
+    box-shadow:inset 0 3px 5px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.08)}
+  .tile::after{content:'';position:absolute;left:20%;right:20%;bottom:9px;height:3px;border-radius:3px;background:rgba(255,255,255,.22)}
+  .tile span{font-weight:700;font-size:clamp(1.2rem,5.6vw,1.95rem);color:#fff;opacity:0;line-height:1}
+  .tile.on,.tile.missed{border-color:transparent}
+  .tile.on{background:linear-gradient(180deg,#9a8dff,#6c5cf0 55%,#5546d6);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 4px 0 #3a2fa3,0 9px 14px rgba(0,0,0,.4)}
+  .tile.missed{background:linear-gradient(180deg,#ff8286,#d63a3f 55%,#a82a2e);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 0 #7a1c20,0 9px 14px rgba(0,0,0,.4)}
+  .tile.on::after,.tile.missed::after{opacity:0}
+  .tile.on span,.tile.missed span{opacity:1;animation:flip .55s cubic-bezier(.2,.9,.25,1.1) both;animation-delay:var(--d,0ms)}
+  .tile.on{animation:tilePop .5s cubic-bezier(.2,.9,.25,1.2) both;animation-delay:var(--d,0ms)}
+  @keyframes flip{from{transform:rotateX(90deg) scale(.5);opacity:0}to{transform:none;opacity:1}}
+  @keyframes tilePop{0%{transform:translateY(0)}40%{transform:translateY(-9px)}100%{transform:translateY(0)}}
+
+  .status{min-height:26px;font-weight:600;font-size:1.03rem;text-align:center;color:var(--muted);transition:color .2s}
+  .status.good{color:var(--good)} .status.bad{color:var(--bad)} .status.gold{color:var(--gold)}
+  .result{min-height:42px;font-size:clamp(1.5rem,7vw,2.15rem);font-weight:700;letter-spacing:.03em;text-align:center}
+  .result.win{color:var(--good);text-shadow:0 0 22px rgba(31,220,174,.75)}
+  .result.lose{color:var(--bad);text-shadow:0 0 22px rgba(255,90,95,.75)}
+  .result.win,.result.lose{animation:blinkTxt 1s infinite}
+  @keyframes blinkTxt{0%,55%{opacity:1}56%,100%{opacity:.08}}
+
+  /* ---------- 3D klavye ---------- */
+  .kb{width:100%;max-width:520px;display:grid;grid-template-columns:repeat(24,1fr);gap:8px 3px;padding:14px 6px 16px;border-radius:22px;
+    background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid var(--stroke);
+    box-shadow:0 16px 34px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1)}
+  .key{position:relative;height:clamp(44px,12.6vw,54px);padding:0;border:0;border-radius:9px;
+    font-weight:700;font-size:clamp(.85rem,4.2vw,1.2rem);color:#ecebff;
+    background:linear-gradient(180deg,#5a5a92 0%,#3d3d69 50%,#2f2f55 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -2px 0 rgba(0,0,0,.28),0 5px 0 #15152c,0 9px 12px rgba(0,0,0,.45);
+    transition:transform .07s,box-shadow .07s,filter .15s;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+  .key::before{content:'';position:absolute;inset:3px 3px 8px;border-radius:7px;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 65%)}
+  .key span{position:relative;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+  .key:hover:not(:disabled){filter:brightness(1.15)}
+  .key:active:not(:disabled){transform:translateY(4px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -2px 0 rgba(0,0,0,.28),0 1px 0 #15152c,0 3px 6px rgba(0,0,0,.45)}
+  .key.correct{color:#fff;background:linear-gradient(180deg,#52f0c6 0%,#1fdcae 45%,#0b9f7e 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(0,0,0,.2),0 1px 0 #066b55,0 3px 6px rgba(0,0,0,.4),0 0 20px rgba(31,220,174,.55);transform:translateY(4px)}
+  .key.wrong{color:#fff;background:linear-gradient(180deg,#ff8286 0%,#e8444a 45%,#ae2a2f 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 0 rgba(0,0,0,.2),0 1px 0 #6e1717,0 3px 6px rgba(0,0,0,.4);transform:translateY(4px);opacity:.78}
+  .key:disabled{cursor:default}
+  .key:disabled:not(.correct):not(.wrong){opacity:.42}
+
+  /* ---------- butonlar ---------- */
+  .actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;width:100%}
+  .btn{--lift:5px;--edge:#17172e;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border:0;border-radius:15px;
+    font-weight:700;font-size:1.02rem;color:#fff;position:relative;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 var(--lift) 0 var(--edge),0 12px 18px rgba(0,0,0,.35);
+    transition:transform .1s,box-shadow .1s,filter .15s}
+  .btn svg{width:20px;height:20px;flex:none;fill:currentColor}
+  .btn.primary{background:linear-gradient(180deg,#9a8dff,#6c5cf0 55%,#5546d6);--edge:#3a2fa3}
+  .btn.gold{color:#3a2600;background:linear-gradient(180deg,#ffe49a,#ffd166 55%,#f0a92b);--edge:#b5781a}
+  .btn.ghost{background:linear-gradient(180deg,#3d3d69,#2c2c52);--edge:#17172e}
+  .btn:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+  .btn:active:not(:disabled){--lift:1px;transform:translateY(4px)}
+  .btn:disabled{opacity:.45;cursor:default;filter:grayscale(.45)}
+  .cost{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;background:rgba(0,0,0,.18);font-size:.92rem}
+
+  footer{margin-top:auto;padding-top:14px;color:#7e7c9f;font-size:.82rem;font-style:italic;text-align:center}
+
+  /* ---------- başlangıç ekranı ---------- */
+  .start{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;overflow:hidden;
+    background:radial-gradient(circle at 50% 22%,#4b46a3 0,#262452 42%,var(--bg0) 80%);
+    transition:opacity .5s ease,visibility .5s ease,transform .5s ease}
+  .start.hidden{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.05)}
+  .start::before,.start::after{content:'';position:absolute;width:360px;height:360px;border:2px solid rgba(124,108,255,.25);border-radius:50%;animation:orbit 9s linear infinite}
+  .start::after{width:540px;height:540px;border-color:rgba(31,220,174,.15);animation-direction:reverse;animation-duration:14s}
+  @keyframes orbit{to{transform:rotate(360deg)}}
+  .fl{position:absolute;bottom:-60px;font-weight:700;color:rgba(255,255,255,.07);animation:rise linear infinite;pointer-events:none}
+  @keyframes rise{to{transform:translateY(-115vh) rotate(28deg)}}
+  .card{position:relative;z-index:1;width:min(100%,430px);padding:34px 24px 28px;text-align:center;border-radius:28px;
+    border:1px solid rgba(255,255,255,.14);background:rgba(45,45,76,.62);
+    box-shadow:0 22px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .logo-wrap{height:176px;margin:-8px auto 4px;display:grid;place-items:center}
+  .logo{display:block;width:170px;height:170px;border-radius:50%;object-fit:cover;mix-blend-mode:screen;
+    filter:drop-shadow(0 12px 18px rgba(0,0,0,.4));animation:float 2.8s ease-in-out infinite}
+  .logo-fb{width:130px;height:130px;border-radius:50%;display:grid;place-items:center;font-size:2.6rem;font-weight:700;letter-spacing:-.05em;
+    background:linear-gradient(135deg,#9a8dff,#5546d6);box-shadow:0 14px 28px rgba(0,0,0,.4),inset 0 2px 0 rgba(255,255,255,.4);animation:float 2.8s ease-in-out infinite}
+  @keyframes float{50%{transform:translateY(-10px) rotate(3deg)}}
+  .card h1{margin:0;font-size:clamp(2.4rem,11vw,3.7rem);line-height:1;letter-spacing:-.04em;font-weight:700;
+    background:linear-gradient(180deg,#fff,#cdc7ff);-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 6px 16px rgba(124,108,255,.55))}
+  .card h1 span{background:linear-gradient(180deg,#b6acff,#7c6cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tag{margin:16px auto 20px;max-width:300px;color:#d9d7ee;line-height:1.55}
+  .mini-stats{display:flex;gap:10px;justify-content:center;margin:0 0 22px}
+  .mini{min-width:112px;padding:9px 14px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid var(--stroke)}
+  .mini span{display:block;font-size:.62rem;letter-spacing:.14em;color:var(--muted);font-weight:600}
+  .mini b{font-size:1.3rem;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+  .mini.gold b{color:var(--gold)} .mini.rec b{color:#ffe8a3}
+  .start-btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:10px;padding:15px 36px;border:0;border-radius:17px;
+    font-size:1.22rem;font-weight:700;color:#fff;background:linear-gradient(180deg,#9a8dff,#6c5cf0 55%,#5546d6);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 0 #3a2fa3,0 16px 28px rgba(0,0,0,.4);transition:transform .12s,box-shadow .12s,filter .15s}
+  .start-btn svg{width:22px;height:22px;fill:currentColor}
+  .start-btn::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;transform:skewX(-20deg);
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);animation:shine 3.2s ease-in-out infinite}
+  @keyframes shine{0%,60%{left:-60%}100%{left:130%}}
+  .start-btn:hover{filter:brightness(1.1);transform:translateY(-2px)}
+  .start-btn:active{transform:translateY(5px);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 0 #3a2fa3,0 6px 12px rgba(0,0,0,.4)}
+  .producer{margin-top:20px;color:#aaa8c4;font-size:.84rem;font-style:italic}
+
+  #fx{position:fixed;inset:0;width:100%;height:100%;z-index:30;pointer-events:none}
+
+  @media (max-width:380px){.chip b{font-size:1.1rem}.btn{padding:11px 14px;font-size:.95rem}.kb{gap:7px 3px;padding:12px 6px 14px}}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+    .result.win,.result.lose{animation:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======== BAŞLANGIÇ EKRANI ======== -->
+<section class="start" id="start" aria-label="Oyun başlangıcı">
+  <div class="card">
+    <div class="logo-wrap">
+      <img id="logo" class="logo" alt="FEYREX logosu">
+      <div class="logo-fb" id="logoFb" hidden>FX</div>
+    </div>
+    <h1>Adam <span>Asmaca</span></h1>
+    <p class="tag">Harfleri tahmin et, kelimeyi tamamla ve darağacından önce kazan.</p>
+    <div class="mini-stats">
+      <div class="mini rec"><span>EN YÜKSEK SKOR</span><b id="highScore">0</b></div>
+      <div class="mini gold"><span>COİN</span><b><i class="coin"></i><em id="highCoin" style="font-style:normal">0</em></b></div>
+    </div>
+    <button class="start-btn" id="startGame" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Oyuna Başla
+    </button>
+    <div class="producer">Yapımcı: Aybars “FEYREX”</div>
+  </div>
+</section>
+
+<!-- ======== OYUN ======== -->
+<main>
+  <header class="hud">
+    <div class="chips" aria-label="Skor tablosu">
+      <div class="chip score"><small>SKOR</small><b id="score">0</b></div>
+      <div class="chip best"><small>REKOR</small><b id="best">0</b></div>
+      <div class="chip coinchip"><small>COİN</small><b><i class="coin"></i><span id="coin">0</span></b></div>
+    </div>
+    <button class="icon-btn" id="soundBtn" type="button" aria-label="Sesi aç/kapat" aria-pressed="true"></button>
+  </header>
+
+  <section class="scene" id="scene">
+    <canvas id="gallows" aria-label="Adam asmaca çizimi"></canvas>
+    <div class="lives" id="lives" aria-label="Kalan hak"></div>
+  </section>
+
+  <div class="word" id="word" aria-hidden="true"></div>
+  <div class="status" id="status" aria-live="polite"></div>
+  <div class="result" id="result" aria-live="assertive"></div>
+
+  <div class="kb" id="keys" aria-label="Harfler"></div>
+
+  <div class="actions">
+    <button class="btn gold" id="hintBtn" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
+      İpucu <span class="cost"><i class="coin"></i>15</span>
+    </button>
+    <button class="btn primary" id="newGame" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      Yeni Oyun
+    </button>
+    <button class="btn ghost" id="mainMenu" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      Ana Menü
+    </button>
+  </div>
+
+  <footer>Aybars “FEYREX”</footer>
+</main>
+
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= VERİ ================= */
+const WORDS = [
+  'kalem','resim','deniz','bulut','kitap','masal','orman','sokak','yıldız','güneş','oyuncu','bilgisayar','telefon','araba','evcil','müzik','film','spor','tatil','yemek','sanat','eğitim','bilim','teknoloji','moda','hayvan','bitki','gezegen','uzay','tarih','dostluk','sevgi','mutluluk','huzur','cesaret','hayal','gerçek','macera','oyun','eğlence','dünya','kültür','sağlık','patlıcan','biber','soğan','sarımsak','havuç','patates','marul','ıspanak','lahana','bezelye','mercimek','nohut','fasulye','pirinç','buğday','mısır','arpa','yulaf','çay','kahve','süt','peynir','yumurta','ekmek','tereyağı','bal','reçel','pasta','kek','çorba','salata','köfte','pilav','döner','lahmacun'
+];
+// QWERTY klavye düzeni (Türkçe harfler dahil)
+const ROWS = [
+  ['q','w','e','r','t','y','u','ı','o','p','ğ','ü'],
+  ['a','s','d','f','g','h','j','k','l','ş','i'],
+  ['z','x','c','v','b','n','m','ö','ç']
+];
+const ROW_START = [1, 2, 4];            // 24 kolonluk grid'de her satırın başlangıcı
+const LETTERS = ROWS.flat();
+const MAX_WRONG = 6, HINT_COST = 15;
+const TR = 'tr-TR';
+const K = { score:'adam-asmaca-yuksek-skor', coin:'adam-asmaca-coin', sound:'adam-asmaca-ses' };
+
+const $ = (s, r = document) => r.querySelector(s);
+const up = c => c.toLocaleUpperCase(TR);
+const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+};
+
+const els = {
+  start:$('#start'), startGame:$('#startGame'), highScoreStart:$('#highScore'), highCoinStart:$('#highCoin'),
+  score:$('#score'), best:$('#best'), coin:$('#coin'), word:$('#word'), status:$('#status'), result:$('#result'),
+  keys:$('#keys'), hint:$('#hintBtn'), scene:$('#scene'), lives:$('#lives'), sound:$('#soundBtn')
+};
+
+/* ================= DURUM ================= */
+let word = '', guessed = new Set(), wrong = 0, score = 0, ended = false, lost = false;
+let highScore = Number(store.get(K.score)) || 0;
+let coin = Number(store.get(K.coin)) || 0;
+let muted = store.get(K.sound) === '0';
+let startVisible = true;
+let tiles = [];
+const keyEls = {};
+const partP = [0,0,0,0,0,0];            // her vücut parçasının belirme animasyonu
+
+/* ================= SES (Web Audio, dosyasız) ================= */
+let ac = null;
+function audio(){
+  if (muted) return null;
+  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return null; } }
+  if (ac.state === 'suspended') ac.resume();
+  return ac;
+}
+function tone(f, d, type='sine', v=.14, delay=0, slideTo){
+  const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + delay;
+  o.type = type; o.frequency.setValueAtTime(f, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + d);
+  g.gain.setValueAtTime(.0001, t0);
+  g.gain.exponentialRampToValueAtTime(v, t0 + .012);
+  g.gain.exponentialRampToValueAtTime(.0001, t0 + d);
+  o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + d + .03);
+}
+const sfx = {
+  ok:   () => { tone(660,.11,'triangle',.16); tone(990,.15,'triangle',.12,.07); },
+  bad:  () => tone(230,.3,'sawtooth',.1,0,110),
+  hint: () => { tone(880,.09,'triangle',.12); tone(1320,.13,'triangle',.1,.08); },
+  win:  () => [523,659,784,1047,1319].forEach((f,i) => tone(f,.2,'sine',.15,i*.1)),
+  lose: () => [400,320,240,170].forEach((f,i) => tone(f,.28,'sawtooth',.12,i*.14)),
+  click:() => tone(520,.05,'square',.04)
+};
+const ICON_ON  = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+const ICON_OFF = '<svg viewBox="0 0 24 24"><path d="M16.5 12A4.5 4.5 0 0014 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>';
+function renderSoundBtn(){ els.sound.innerHTML = muted ? ICON_OFF : ICON_ON; els.sound.setAttribute('aria-pressed', String(!muted)); }
+
+/* ================= ARAYÜZ YARDIMCILARI ================= */
+function setStatus(msg, cls=''){ els.status.textContent = msg; els.status.className = 'status ' + cls; }
+function showResult(text, cls){ els.result.textContent = text; els.result.className = 'result ' + cls; }
+function setNum(el, v){
+  const s = String(v); if (el.textContent === s) return;
+  el.textContent = s;
+  const chip = el.closest('.chip'); if (!chip || reduced) return;
+  chip.classList.remove('bump'); void chip.offsetWidth; chip.classList.add('bump');
+}
+function renderScore(){
+  if (score > highScore) { highScore = score; store.set(K.score, highScore); }
+  store.set(K.coin, coin);
+  setNum(els.score, score); setNum(els.best, highScore); setNum(els.coin, coin);
+  els.highScoreStart.textContent = highScore; els.highCoinStart.textContent = coin;
+}
+function shake(){ if (reduced) return; els.scene.classList.remove('shake'); void els.scene.offsetWidth; els.scene.classList.add('shake'); }
+function vibrate(p){ try { navigator.vibrate && navigator.vibrate(p); } catch(e){} }
+
+/* ---- klavye + kalpler ---- */
+ROWS.forEach((row, r) => row.forEach((ch, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'key'; b.dataset.letter = ch;
+  b.innerHTML = '<span>' + up(ch) + '</span>';
+  b.style.gridRow = String(r + 1);
+  b.style.gridColumn = (ROW_START[r] + i * 2) + ' / span 2';
+  b.setAttribute('aria-label', 'Harf ' + up(ch));
+  b.addEventListener('click', () => guess(ch));
+  els.keys.append(b); keyEls[ch] = b;
+}));
+const HEART = '<svg class="heart" viewBox="0 0 24 24"><path fill="#ff5a5f" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+els.lives.innerHTML = HEART.repeat(MAX_WRONG);
+const hearts = [...els.lives.querySelectorAll('.heart')];
+
+/* ================= OYUN MANTIĞI ================= */
+function buildTiles(){
+  els.word.innerHTML = '';
+  tiles = [...word].map(() => {
+    const t = document.createElement('div'); t.className = 'tile'; t.innerHTML = '<span></span>';
+    els.word.append(t); return t;
+  });
+}
+function allFound(){ return [...word].every(c => guessed.has(c)); }
+
+function update(){
+  let n = 0;
+  [...word].forEach((ch, i) => {
+    const t = tiles[i]; if (!t) return;
+    if (guessed.has(ch) && !t.classList.contains('on')) {
+      t.firstChild.textContent = up(ch);
+      t.style.setProperty('--d', (n++ * 80) + 'ms');
+      t.classList.add('on');
+    } else if (!guessed.has(ch) && ended && lost && !t.classList.contains('missed')) {
+      t.firstChild.textContent = up(ch);
+      t.style.setProperty('--d', (n++ * 80) + 'ms');
+      t.classList.add('missed');
+    }
+  });
+  hearts.forEach((h, i) => h.classList.toggle('lost', i >= MAX_WRONG - wrong));
+  els.hint.disabled = !word || ended || coin < HINT_COST || allFound();
+  els.hint.title = coin < HINT_COST ? `İpucu için ${HINT_COST} coin gerekli` : 'Rastgele bir harfi aç';
+  renderScore();
+}
+
+function newGame(){
+  let w; do { w = WORDS[Math.floor(Math.random() * WORDS.length)]; } while (w === word && WORDS.length > 1);
+  word = w; guessed = new Set(); wrong = 0; ended = false; lost = false; partP.fill(0);
+  showResult('', ''); setStatus('Bir harf seç!', '');
+  Object.values(keyEls).forEach(b => { b.disabled = false; b.className = 'key'; });
+  buildTiles(); update();
+}
+
+function guess(ch){
+  if (!word || ended || guessed.has(ch) || startVisible) return;
+  guessed.add(ch);
+  const k = keyEls[ch]; k.disabled = true;
+  if (word.includes(ch)) {
+    k.classList.add('correct'); score += 10; coin += 2;
+    setStatus(`Doğru! '${up(ch)}' kelimede var.`, 'good'); sfx.ok();
+  } else {
+    k.classList.add('wrong'); wrong++; score = Math.max(0, score - 5);
+    setStatus(`Yanlış! '${up(ch)}' kelimede yok.`, 'bad'); sfx.bad(); shake(); vibrate(30);
+  }
+  update();
+  if (allFound()) finish(true); else if (wrong >= MAX_WRONG) finish(false);
+}
+
+function useHint(){
+  if (!word || ended || coin < HINT_COST) return;
+  const rest = [...new Set([...word].filter(c => !guessed.has(c)))];
+  if (!rest.length) return;
+  const ch = rest[Math.floor(Math.random() * rest.length)];
+  guessed.add(ch); coin -= HINT_COST;
+  const k = keyEls[ch]; k.disabled = true; k.classList.add('correct');
+  setStatus(`İpucu: '${up(ch)}' harfi açıldı.`, 'gold'); sfx.hint();
+  update();
+  if (allFound()) finish(true);
+}
+
+function finish(win){
+  ended = true; lost = !win;
+  Object.values(keyEls).forEach(b => b.disabled = true);
+  if (win) {
+    score += 20; coin += 10;
+    setStatus('Kelimeyi buldun! (+20 skor, +10 coin)', 'good');
+    showResult('🎉 KAZANDIN! 🎉', 'win'); sfx.win(); confetti(); vibrate([20,40,20,40,80]);
+  } else {
+    setStatus(`Doğru kelime: ${up(word)}`, 'bad');
+    showResult('💀 KAYBETTİN 💀', 'lose'); sfx.lose(); vibrate([80,40,120]);
+  }
+  update();
+}
+
+/* ---- menü ---- */
+function showStart(){ startVisible = true; els.start.classList.remove('hidden'); renderScore(); }
+function hideStart(){ startVisible = false; els.start.classList.add('hidden'); }
+
+els.startGame.addEventListener('click', () => { sfx.click(); hideStart(); newGame(); });
+$('#newGame').addEventListener('click', () => { sfx.click(); newGame(); });
+$('#mainMenu').addEventListener('click', () => { sfx.click(); showStart(); });
+els.hint.addEventListener('click', useHint);
+els.sound.addEventListener('click', () => {
+  muted = !muted; store.set(K.sound, muted ? '0' : '1'); renderSoundBtn(); if (!muted) sfx.click();
+});
+document.addEventListener('keydown', e => {
+  if (startVisible || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  if (e.key === 'Enter' && ended) { newGame(); return; }
+  const ch = e.key.length === 1 ? e.key.toLocaleLowerCase(TR) : '';
+  if (LETTERS.includes(ch)) guess(ch);
+});
+
+/* ================= GRAFİK MOTORU ================= */
+const canvas = $('#gallows'), ctx = canvas.getContext('2d');
+const W = 320, H = 340;
+const SKIN = '#f0b88c', SHIRT = '#4a74f5';
+let dpr = 1, cw = 0, sc = 1;
+
+function resizeCanvas(){
+  const r = canvas.getBoundingClientRect(); if (!r.width) return;
+  dpr = Math.min(window.devicePixelRatio || 1, 3); cw = r.width; sc = cw / W;
+  canvas.width = Math.round(cw * dpr); canvas.height = Math.round(cw * H / W * dpr);
+}
+window.addEventListener('resize', resizeCanvas);
+if (window.ResizeObserver) new ResizeObserver(resizeCanvas).observe(canvas);
+
+function shade(hex, f){
+  const n = parseInt(hex.slice(1), 16);
+  const c = x => Math.max(0, Math.min(255, Math.round(f >= 0 ? x + (255 - x) * f : x * (1 + f))));
+  return '#' + [n >> 16, (n >> 8) & 255, n & 255].map(x => c(x).toString(16).padStart(2, '0')).join('');
+}
+function rr(x, y, w, h, r){
+  ctx.beginPath(); ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function ln(x1, y1, x2, y2){ ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+function limb(x1, y1, x2, y2, w, c){
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = shade(c, -.36); ctx.lineWidth = w + 1.8; ln(x1, y1, x2, y2);
+  ctx.strokeStyle = c; ctx.lineWidth = w; ln(x1, y1, x2, y2);
+  ctx.strokeStyle = shade(c, .4); ctx.lineWidth = w * .28; ln(x1 - w * .17, y1, x2 - w * .17, y2);
+}
+function ball(x, y, r, c){
+  const g = ctx.createRadialGradient(x - r * .35, y - r * .4, r * .1, x, y, r * 1.05);
+  g.addColorStop(0, shade(c, .45)); g.addColorStop(.55, c); g.addColorStop(1, shade(c, -.3));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
+}
+const easeOutBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+function pop(i, ax, ay, fn){
+  const p = partP[i]; if (p <= .002) return;
+  const s = .55 + .45 * easeOutBack(Math.min(1, p));
+  ctx.save(); ctx.globalAlpha = Math.min(1, p * 2);
+  ctx.translate(ax, ay); ctx.scale(s, s); ctx.translate(-ax, -ay); fn(); ctx.restore();
+}
+
+/* ---- sahne: gökyüzü, ay, tepeler, zemin ---- */
+const STARS = (() => { let a = 7; const rnd = () => (a = (a * 16807) % 2147483647) / 2147483647;
+  return Array.from({ length: 34 }, () => ({ x: rnd() * W, y: rnd() * 175, r: .5 + rnd() * 1.1, p: rnd() * 6.28 })); })();
+
+function drawBackdrop(t){
+  let g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0b0e2e'); g.addColorStop(.55, '#2a2166'); g.addColorStop(1, '#4b2d7c');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  STARS.forEach(s => {
+    ctx.globalAlpha = .3 + .7 * Math.abs(Math.sin(t * 1.1 + s.p));
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.2832); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  g = ctx.createRadialGradient(262, 58, 4, 262, 58, 64);
+  g.addColorStop(0, 'rgba(255,244,214,.5)'); g.addColorStop(1, 'rgba(255,244,214,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(262, 58, 64, 0, 6.2832); ctx.fill();
+  g = ctx.createRadialGradient(256, 52, 2, 262, 58, 19);
+  g.addColorStop(0, '#fffbe8'); g.addColorStop(1, '#f0d78a');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(262, 58, 17, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = 'rgba(176,146,78,.3)';
+  [[257,53,3.6],[267,64,2.6],[264,49,1.8]].forEach(([x,y,r]) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill(); });
+  // tepeler
+  ctx.fillStyle = '#302a6f'; ctx.beginPath(); ctx.moveTo(0, 262);
+  ctx.bezierCurveTo(60, 224, 120, 240, 170, 256); ctx.bezierCurveTo(220, 270, 270, 230, 320, 246);
+  ctx.lineTo(320, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#241f57'; ctx.beginPath(); ctx.moveTo(0, 280);
+  ctx.bezierCurveTo(80, 258, 160, 290, 230, 272); ctx.bezierCurveTo(280, 260, 305, 270, 320, 274);
+  ctx.lineTo(320, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+  // zemin
+  g = ctx.createLinearGradient(0, 292, 0, H);
+  g.addColorStop(0, '#24585a'); g.addColorStop(1, '#0f2a30');
+  ctx.fillStyle = g; ctx.fillRect(0, 292, W, H - 292);
+  ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.fillRect(0, 292, W, 1.2);
+  ctx.fillStyle = '#2f7467';
+  for (let x = 2; x < W; x += 7) {
+    const h = 4 + ((x * 13) % 6);
+    ctx.beginPath(); ctx.moveTo(x, 293); ctx.lineTo(x + 2, 293 - h); ctx.lineTo(x + 4, 293); ctx.fill();
+  }
+}
+
+/* ---- ahşap darağacı ---- */
+function wood(x, y, w, h, vertical){
+  const g = vertical ? ctx.createLinearGradient(x, 0, x + w, 0) : ctx.createLinearGradient(0, y, 0, y + h);
+  g.addColorStop(0, '#5a3719'); g.addColorStop(.32, '#a8713c'); g.addColorStop(.7, '#8a5a2e'); g.addColorStop(1, '#583519');
+  ctx.fillStyle = g; rr(x, y, w, h, 2.5); ctx.fill();
+  ctx.lineWidth = .8; ctx.strokeStyle = 'rgba(40,20,5,.35)';
+  if (vertical) { for (let i = 1; i < 4; i++) ln(x + w * i / 4, y + 2, x + w * i / 4 + .6, y + h - 2); }
+  else { for (let i = 1; i < 3; i++) ln(x + 2, y + h * i / 3, x + w - 2, y + h * i / 3 + .5); }
+  ctx.strokeStyle = 'rgba(255,224,176,.3)'; ctx.lineWidth = 1;
+  if (vertical) ln(x + 1.5, y + 2, x + 1.5, y + h - 2); else ln(x + 2, y + 1.5, x + w - 2, y + 1.5);
+}
+function bolt(x, y){
+  ball(x, y, 2.8, '#b9bfd6'); ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = .8;
+  ctx.beginPath(); ctx.arc(x, y, 2.8, 0, 6.2832); ctx.stroke();
+}
+function drawGallows(){
+  ctx.fillStyle = 'rgba(0,0,0,.32)'; ctx.beginPath(); ctx.ellipse(124, 302, 100, 6, 0, 0, 6.2832); ctx.fill();
+  wood(24, 286, 200, 14, false);                       // taban
+  wood(66, 40, 14, 248, true);                          // direk
+  // destek çaprazı
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#4a2c13'; ctx.lineWidth = 10; ln(80, 108, 121, 50);
+  ctx.strokeStyle = '#8a5a2e'; ctx.lineWidth = 8;  ln(80, 108, 121, 50);
+  ctx.strokeStyle = 'rgba(255,224,176,.3)'; ctx.lineWidth = 1.2; ln(78.5, 106, 119.5, 48);
+  wood(60, 34, 166, 14, false);                         // üst kiriş
+  bolt(73, 41); bolt(73, 281); bolt(215, 41); bolt(40, 293); bolt(208, 293);
+}
+
+/* ---- karakter ---- */
+function drawHead(t){
+  const cx = 190, cy = 108, r = 22, s = wrong / MAX_WRONG, dead = ended && lost;
+  // boyun
+  ctx.fillStyle = shade(SKIN, -.2); rr(185, 126, 10, 14, 3); ctx.fill();
+  // kulaklar
+  ball(168, 110, 4.6, shade(SKIN, -.06)); ball(212, 110, 4.6, shade(SKIN, -.06));
+  // kafa
+  const g = ctx.createRadialGradient(183, 99, 3, cx, cy, r + 3);
+  g.addColorStop(0, '#ffe3c8'); g.addColorStop(.6, SKIN); g.addColorStop(1, '#d4966a');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2832); ctx.fill();
+  ctx.strokeStyle = 'rgba(120,60,30,.35)'; ctx.lineWidth = 1; ctx.stroke();
+  // saç
+  const hg = ctx.createLinearGradient(0, 78, 0, 100);
+  hg.addColorStop(0, '#4a3326'); hg.addColorStop(1, '#22150f');
+  ctx.fillStyle = hg; ctx.beginPath(); ctx.moveTo(168.2, 107);
+  ctx.bezierCurveTo(164, 82, 180, 77, 190, 77); ctx.bezierCurveTo(202, 77, 216, 82, 211.8, 107);
+  ctx.bezierCurveTo(209, 98, 203, 93, 196, 92); ctx.bezierCurveTo(190, 99, 181, 97, 176, 93);
+  ctx.bezierCurveTo(172, 96, 170, 100, 168.2, 107); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = 1.2; ctx.beginPath();
+  ctx.moveTo(175, 86); ctx.bezierCurveTo(180, 80, 190, 79, 198, 81); ctx.stroke();
+  // yanaklar
+  if (wrong <= 2) { ctx.fillStyle = 'rgba(255,110,120,.28)'; [-1, 1].forEach(sd => { ctx.beginPath(); ctx.arc(cx + sd * 13, cy + 8, 3.6, 0, 6.2832); ctx.fill(); }); }
+  // gözler
+  const bt = t % 3.8, blink = (!reduced && bt < .16) ? Math.sin(bt / .16 * Math.PI) : 0, eyeY = cy + 1;
+  ctx.lineCap = 'round';
+  [-1, 1].forEach(sd => {
+    const ex = cx + sd * 8;
+    if (dead) {
+      ctx.strokeStyle = '#3a2218'; ctx.lineWidth = 2;
+      ln(ex - 3.4, eyeY - 3.4, ex + 3.4, eyeY + 3.4); ln(ex + 3.4, eyeY - 3.4, ex - 3.4, eyeY + 3.4);
+    } else {
+      const ry = 5.2 * Math.max(.08, 1 - blink);
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(ex, eyeY, 4.7, ry, 0, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = 'rgba(80,40,20,.45)'; ctx.lineWidth = .8; ctx.stroke();
+      if (blink < .6) {
+        ctx.fillStyle = '#2a1a12'; ctx.beginPath(); ctx.ellipse(ex + sd * .4, eyeY + .6 * s, 2.5, 2.7 * Math.max(.3, 1 - blink), 0, 0, 6.2832); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + sd * .4 - .8, eyeY - .9, .85, 0, 6.2832); ctx.fill();
+      }
+    }
+    // kaşlar (yanlış arttıkça endişeli)
+    ctx.strokeStyle = '#33201a'; ctx.lineWidth = 2.1;
+    const outerY = cy - 8 + s * 1.6, innerY = cy - 10 - s * 3.6;
+    ln(cx + sd * 12.6, outerY, cx + sd * 4.2, innerY);
+  });
+  // burun
+  ctx.strokeStyle = 'rgba(140,80,50,.5)'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(cx - 1.4, cy + 6); ctx.quadraticCurveTo(cx, cy + 8, cx + 1.8, cy + 6.4); ctx.stroke();
+  // ağız
+  const curve = 5.2 - wrong * 1.9, my = cy + 13;
+  ctx.strokeStyle = '#7a3b2e'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx - 6, my); ctx.quadraticCurveTo(cx, my + curve, cx + 6, my); ctx.stroke();
+  if (dead) { ctx.fillStyle = '#e2506a'; rr(cx - 1.5, my + .4, 5, 6.5, 2.4); ctx.fill(); }
+  // ter damlası
+  if (wrong >= 3 && !dead) {
+    const y = cy - 6 + Math.sin(t * 3) * 1.2, x = cx + 18;
+    ctx.fillStyle = 'rgba(130,205,255,.92)'; ctx.beginPath(); ctx.moveTo(x, y - 5);
+    ctx.bezierCurveTo(x + 4, y, x + 4.2, y + 4, x, y + 4.5); ctx.bezierCurveTo(x - 4.2, y + 4, x - 4, y, x, y - 5); ctx.fill();
+  }
+  // boyundaki ilmek
+  ctx.strokeStyle = '#d4b483'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(190, 136, 12, 4.4, 0, 0, 6.2832); ctx.stroke();
+  ctx.setLineDash([2, 2.4]); ctx.strokeStyle = 'rgba(88,56,22,.6)'; ctx.stroke(); ctx.setLineDash([]);
+}
+function drawTorso(){
+  ctx.save(); rr(173, 136, 34, 58, 13);
+  const g = ctx.createLinearGradient(173, 0, 207, 0);
+  g.addColorStop(0, '#2f50c9'); g.addColorStop(.45, '#6a92ff'); g.addColorStop(.8, SHIRT); g.addColorStop(1, '#2a45b0');
+  ctx.fillStyle = g; ctx.fill(); ctx.clip();
+  ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fillRect(173, 162, 34, 6);
+  ctx.fillStyle = '#22223f'; ctx.fillRect(173, 187, 34, 8);
+  ctx.fillStyle = '#e7c35a'; ctx.fillRect(186.5, 188.5, 7, 5);
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(0,0,0,.3)'; ctx.lineWidth = 1; rr(173, 136, 34, 58, 13); ctx.stroke();
+  // göğüs yıldızı
+  ctx.fillStyle = '#ffd166'; ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -1.5708 + i * .6283, rad = i % 2 ? 2.4 : 5.2; ctx.lineTo(190 + Math.cos(a) * rad, 150 + Math.sin(a) * rad); }
+  ctx.closePath(); ctx.fill();
+}
+function drawArm(side, t){
+  const sx = 190 + side * 16, sy = 148, ex = sx + side * 12, ey = 168, hx = sx + side * 19, hy = 191;
+  ctx.save(); ctx.translate(sx, sy);
+  ctx.rotate(reduced ? 0 : Math.sin(t * 1.8 + (side > 0 ? 1.3 : 0)) * .07); ctx.translate(-sx, -sy);
+  limb(ex, ey, hx, hy, 7.5, SKIN); ball(hx, hy + 1.5, 5.2, SKIN);
+  limb(sx, sy, ex, ey, 10.6, SHIRT);
+  ctx.restore();
+}
+function drawLeg(side){
+  const hx = 190 + side * 9, fx = 190 + side * 15;
+  limb(hx + side, 218, fx, 247, 8, SKIN);
+  // spor ayakkabı
+  const cx = fx + side * 1.5, cy = 252;
+  ctx.fillStyle = '#f2f2ff'; ctx.beginPath(); ctx.ellipse(cx, cy + 2.2, 9.6, 4.3, 0, 0, 6.2832); ctx.fill();
+  const sg = ctx.createLinearGradient(0, cy - 5, 0, cy + 3); sg.addColorStop(0, '#ff6b7a'); sg.addColorStop(1, '#c93249');
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.ellipse(cx, cy - .4, 8.8, 4.6, 0, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(cx - 2, cy - 2, 3.4, 1.3, 0, 0, 6.2832); ctx.fill();
+  // şort
+  const g = ctx.createLinearGradient(hx - 8, 0, hx + 8, 0);
+  g.addColorStop(0, '#26306a'); g.addColorStop(.5, '#3f4f9e'); g.addColorStop(1, '#26306a');
+  ctx.fillStyle = g; rr(hx - 8, 188, 16, 36, 6); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = 1; ctx.stroke();
+}
+function drawFigure(t){
+  const dead = ended && lost;
+  const amp = reduced ? 0 : (dead ? .06 : (wrong === 0 ? .012 : .018 + .007 * wrong));
+  ctx.save(); ctx.translate(190, 48); ctx.rotate(Math.sin(t * 1.5) * amp); ctx.translate(-190, -48);
+  // ip
+  const headOn = partP[0] > .02, ropeEnd = headOn ? 134 : 91;
+  ctx.lineCap = 'round'; ctx.strokeStyle = '#d4b483'; ctx.lineWidth = 3.4;
+  ctx.beginPath(); ctx.moveTo(190, 48); ctx.lineTo(190, ropeEnd); ctx.stroke();
+  ctx.setLineDash([2, 2.4]); ctx.strokeStyle = 'rgba(88,56,22,.6)'; ctx.stroke(); ctx.setLineDash([]);
+  if (partP[0] < .4) {                                  // boş ilmek
+    ctx.save(); ctx.globalAlpha = 1 - partP[0] * 2.5; ctx.strokeStyle = '#d4b483'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(190, 103, 9, 12, 0, 0, 6.2832); ctx.stroke();
+    ctx.fillStyle = '#b8935d'; ctx.beginPath(); ctx.arc(190, 91, 3.6, 0, 6.2832); ctx.fill(); ctx.restore();
+  }
+  pop(4, 181, 192, () => drawLeg(-1));
+  pop(5, 199, 192, () => drawLeg(1));
+  pop(2, 174, 148, () => drawArm(-1, tNow));
+  pop(3, 206, 148, () => drawArm(1, tNow));
+  pop(1, 190, 160, drawTorso);
+  pop(0, 190, 120, () => drawHead(tNow));
+  ctx.restore();
+}
+
+let tNow = 0;
+function frame(ts){
+  requestAnimationFrame(frame);
+  if (startVisible || !cw) return;
+  tNow = ts / 1000;
+  for (let i = 0; i < 6; i++) {
+    const target = wrong > i ? 1 : 0;
+    partP[i] += (target - partP[i]) * .2;
+    if (Math.abs(target - partP[i]) < .002) partP[i] = target;
+  }
+  ctx.setTransform(dpr * sc, 0, 0, dpr * sc, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  drawBackdrop(tNow); drawGallows(); drawFigure(tNow);
+}
+
+/* ================= KONFETİ ================= */
+const fx = $('#fx'), fctx = fx.getContext('2d');
+let bits = [], fxRun = false;
+function confetti(){
+  if (reduced) return;
+  const d = Math.min(window.devicePixelRatio || 1, 2);
+  fx.width = innerWidth * d; fx.height = innerHeight * d; fctx.setTransform(d, 0, 0, d, 0, 0);
+  const cols = ['#7c6cff','#1fdcae','#ffd166','#ff5a5f','#5bc0ff','#ffffff'];
+  for (let i = 0; i < 150; i++) bits.push({
+    x: innerWidth / 2 + (Math.random() - .5) * 120, y: innerHeight * .55,
+    vx: (Math.random() - .5) * 15, vy: -Math.random() * 15 - 5,
+    w: 6 + Math.random() * 6, h: 4 + Math.random() * 5, r: Math.random() * 6.28, vr: (Math.random() - .5) * .4,
+    c: cols[i % cols.length]
+  });
+  if (!fxRun) { fxRun = true; requestAnimationFrame(fxLoop); }
+}
+function fxLoop(){
+  fctx.clearRect(0, 0, innerWidth, innerHeight);
+  bits.forEach(b => {
+    b.vy += .42; b.vx *= .992; b.x += b.vx; b.y += b.vy; b.r += b.vr;
+    fctx.save(); fctx.translate(b.x, b.y); fctx.rotate(b.r); fctx.fillStyle = b.c; fctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); fctx.restore();
+  });
+  bits = bits.filter(b => b.y < innerHeight + 30);
+  if (bits.length) requestAnimationFrame(fxLoop); else { fxRun = false; fctx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+
+/* ================= BAŞLANGIÇ ================= */
+// logo: sırayla dene, hiçbiri yoksa yedek amblem göster
+const logo = $('#logo'), logoSrc = ['Adsız tasarım.png', 'feyrex-logo.png', 'assets/feyrex-logo.png']; let li = 0;
+logo.addEventListener('error', () => {
+  li++;
+  if (li < logoSrc.length) logo.src = logoSrc[li]; else { logo.hidden = true; $('#logoFb').hidden = false; }
+});
+logo.src = logoSrc[0];
+
+// ana menüde süzülen harfler
+(() => {
+  const letters = 'ADAMASMACAFEYREX'; 
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('span'); s.className = 'fl';
+    s.textContent = letters[Math.floor(Math.random() * letters.length)];
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.fontSize = (22 + Math.random() * 46) + 'px';
+    s.style.animationDuration = (11 + Math.random() * 12) + 's';
+    s.style.animationDelay = (-Math.random() * 20) + 's';
+    els.start.prepend(s);
+  }
+})();
+
+renderSoundBtn();
+renderScore();
+resizeCanvas();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
