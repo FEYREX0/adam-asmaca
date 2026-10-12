@@ -36,47 +36,50 @@
   .coin::after{content:'';position:absolute;inset:27%;border-radius:50%;border:.09em solid rgba(150,90,0,.5)}
 
   /* ---------- ana sayfa ---------- */
-  main{width:min(100%,560px);margin:0 auto;min-height:100vh;min-height:100dvh;
-    padding:max(12px,env(safe-area-inset-top)) 14px calc(44px + env(safe-area-inset-bottom));
-    display:flex;flex-direction:column;align-items:center;gap:12px}
+  main{width:min(100%,560px);margin:0 auto;height:100vh;height:100dvh;overflow:hidden;
+    padding:max(8px,env(safe-area-inset-top)) 8px max(8px,env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;align-items:center;gap:8px}
+  main>*{flex:none}
 
   .hud{width:100%;display:flex;gap:8px;align-items:stretch}
   .chips{flex:1;display:flex;gap:8px;min-width:0}
   .chip{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;
-    padding:7px 8px;border-radius:14px;background:var(--glass);border:1px solid var(--stroke);
+    padding:4px 6px;border-radius:12px;background:var(--glass);border:1px solid var(--stroke);
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     box-shadow:0 6px 18px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08)}
   .chip small{font-size:.62rem;letter-spacing:.14em;color:var(--muted);font-weight:600}
-  .chip b{font-size:1.28rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
+  .chip b{font-size:1.1rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
   .chip.score b{color:var(--accent-l)}
   .chip.best b{color:#ffe8a3}
   .chip.coinchip b{color:var(--gold)}
   .chip.bump b{animation:bump .38s}
   @keyframes bump{40%{transform:scale(1.28)}}
-  .icon-btn{width:50px;border-radius:14px;border:1px solid var(--stroke);background:var(--glass);display:grid;place-items:center;
+  .icon-btn{width:44px;border-radius:14px;border:1px solid var(--stroke);background:var(--glass);display:grid;place-items:center;
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 6px 18px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08);
     transition:transform .1s,background .15s}
   .icon-btn:hover{background:rgba(255,255,255,.13)}
   .icon-btn:active{transform:scale(.94)}
   .icon-btn svg{width:22px;height:22px;fill:currentColor}
 
-  .scene{position:relative;width:min(100%,390px);border-radius:24px;overflow:hidden;border:1px solid var(--stroke);
-    box-shadow:0 20px 44px rgba(0,0,0,.5),0 0 0 5px rgba(255,255,255,.03)}
-  .scene canvas{display:block;width:100%;aspect-ratio:320/340}
+  .stage{flex:1 1 0;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+  .scene{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--stroke);
+    box-shadow:0 16px 36px rgba(0,0,0,.5),0 0 0 4px rgba(255,255,255,.03)}
+  .scene canvas{display:block;width:100%;height:100%}
+  .sig{position:absolute;left:10px;bottom:6px;font-size:.7rem;font-style:italic;color:rgba(255,255,255,.55);pointer-events:none}
   .scene.shake{animation:shake .4s}
   @keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
-  .lives{position:absolute;left:10px;top:10px;display:flex;gap:3px;padding:6px 9px;border-radius:999px;
+  .lives{position:absolute;left:10px;top:10px;display:flex;gap:3px;padding:4px 7px;border-radius:999px;
     background:rgba(10,10,30,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14)}
-  .heart{width:17px;height:17px;transition:transform .35s,opacity .35s,filter .35s;filter:drop-shadow(0 0 4px rgba(255,90,95,.75))}
+  .heart{width:14px;height:14px;transition:transform .35s,opacity .35s,filter .35s;filter:drop-shadow(0 0 4px rgba(255,90,95,.75))}
   .heart.lost{opacity:.25;transform:scale(.78);filter:grayscale(1)}
 
   /* ---------- kelime kutuları ---------- */
-  .word{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(4px,1.5vw,8px);min-height:60px;padding:4px 6px;perspective:600px}
-  .tile{position:relative;width:clamp(28px,8.4vw,44px);height:clamp(40px,11.4vw,58px);border-radius:11px;display:grid;place-items:center;
+  .word{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(3px,1.2vw,7px);min-height:0;padding:2px 4px;perspective:600px}
+  .tile{position:relative;width:clamp(24px,7.4vw,40px);height:clamp(32px,6.2vh,50px);height:clamp(32px,6.2dvh,50px);border-radius:9px;display:grid;place-items:center;
     background:linear-gradient(180deg,#33335b,#25254a);border:1px solid rgba(255,255,255,.08);
     box-shadow:inset 0 3px 5px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.08)}
   .tile::after{content:'';position:absolute;left:20%;right:20%;bottom:9px;height:3px;border-radius:3px;background:rgba(255,255,255,.22)}
-  .tile span{font-weight:700;font-size:clamp(1.2rem,5.6vw,1.95rem);color:#fff;opacity:0;line-height:1}
+  .tile span{font-weight:700;font-size:clamp(1rem,4.8vw,1.7rem);color:#fff;opacity:0;line-height:1}
   .tile.on,.tile.missed{border-color:transparent}
   .tile.on{background:linear-gradient(180deg,#9a8dff,#6c5cf0 55%,#5546d6);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 4px 0 #3a2fa3,0 9px 14px rgba(0,0,0,.4)}
@@ -88,19 +91,20 @@
   @keyframes flip{from{transform:rotateX(90deg) scale(.5);opacity:0}to{transform:none;opacity:1}}
   @keyframes tilePop{0%{transform:translateY(0)}40%{transform:translateY(-9px)}100%{transform:translateY(0)}}
 
-  .status{min-height:26px;font-weight:600;font-size:1.03rem;text-align:center;color:var(--muted);transition:color .2s}
+  .status{min-height:22px;font-weight:600;font-size:.98rem;text-align:center;color:var(--muted);transition:color .2s}
   .status.good{color:var(--good)} .status.bad{color:var(--bad)} .status.gold{color:var(--gold)}
-  .result{min-height:42px;font-size:clamp(1.5rem,7vw,2.15rem);font-weight:700;letter-spacing:.03em;text-align:center}
+  .result{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);white-space:nowrap;padding:5px 14px;border-radius:14px;background:rgba(10,10,30,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-size:clamp(1.05rem,5vw,1.7rem);font-weight:700;letter-spacing:.03em;text-align:center;pointer-events:none}
+  .result:empty{display:none}
   .result.win{color:var(--good);text-shadow:0 0 22px rgba(31,220,174,.75)}
   .result.lose{color:var(--bad);text-shadow:0 0 22px rgba(255,90,95,.75)}
   .result.win,.result.lose{animation:blinkTxt 1s infinite}
   @keyframes blinkTxt{0%,55%{opacity:1}56%,100%{opacity:.08}}
 
   /* ---------- 3D klavye ---------- */
-  .kb{width:100%;max-width:520px;display:grid;grid-template-columns:repeat(24,1fr);gap:8px 3px;padding:14px 6px 16px;border-radius:22px;
+  .kb{width:100%;max-width:520px;display:grid;grid-template-columns:repeat(24,1fr);gap:7px 3px;padding:8px 5px 10px;border-radius:18px;
     background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid var(--stroke);
     box-shadow:0 16px 34px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1)}
-  .key{position:relative;height:clamp(44px,12.6vw,54px);padding:0;border:0;border-radius:9px;
+  .key{position:relative;height:clamp(34px,5.8vh,52px);height:clamp(34px,5.8dvh,52px);padding:0;border:0;border-radius:9px;
     font-weight:700;font-size:clamp(.85rem,4.2vw,1.2rem);color:#ecebff;
     background:linear-gradient(180deg,#5a5a92 0%,#3d3d69 50%,#2f2f55 100%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -2px 0 rgba(0,0,0,.28),0 5px 0 #15152c,0 9px 12px rgba(0,0,0,.45);
@@ -119,12 +123,12 @@
   .key:disabled:not(.correct):not(.wrong){opacity:.42}
 
   /* ---------- butonlar ---------- */
-  .actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;width:100%}
-  .btn{--lift:5px;--edge:#17172e;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border:0;border-radius:15px;
-    font-weight:700;font-size:1.02rem;color:#fff;position:relative;
+  .actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
+  .btn{--lift:4px;--edge:#17172e;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 14px;border:0;border-radius:13px;
+    font-weight:700;font-size:.95rem;color:#fff;position:relative;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 var(--lift) 0 var(--edge),0 12px 18px rgba(0,0,0,.35);
     transition:transform .1s,box-shadow .1s,filter .15s}
-  .btn svg{width:20px;height:20px;flex:none;fill:currentColor}
+  .btn svg{width:18px;height:18px;flex:none;fill:currentColor}
   .btn.primary{background:linear-gradient(180deg,#9a8dff,#6c5cf0 55%,#5546d6);--edge:#3a2fa3}
   .btn.gold{color:#3a2600;background:linear-gradient(180deg,#ffe49a,#ffd166 55%,#f0a92b);--edge:#b5781a}
   .btn.ghost{background:linear-gradient(180deg,#3d3d69,#2c2c52);--edge:#17172e}
@@ -133,7 +137,6 @@
   .btn:disabled{opacity:.45;cursor:default;filter:grayscale(.45)}
   .cost{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;background:rgba(0,0,0,.18);font-size:.92rem}
 
-  footer{margin-top:auto;padding-top:14px;color:#7e7c9f;font-size:.82rem;font-style:italic;text-align:center}
 
   /* ---------- başlangıç ekranı ---------- */
   .start{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;overflow:hidden;
@@ -177,7 +180,7 @@
 
   #fx{position:fixed;inset:0;width:100%;height:100%;z-index:30;pointer-events:none}
 
-  @media (max-width:380px){.chip b{font-size:1.1rem}.btn{padding:11px 14px;font-size:.95rem}.kb{gap:7px 3px;padding:12px 6px 14px}}
+  @media (max-width:420px){.btn .lbl{display:none}.btn.ghost{padding:9px 12px}}
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
     .result.win,.result.lose{animation:none!important}
@@ -217,14 +220,17 @@
     <button class="icon-btn" id="soundBtn" type="button" aria-label="Sesi aç/kapat" aria-pressed="true"></button>
   </header>
 
+  <div class="stage" id="stage">
   <section class="scene" id="scene">
     <canvas id="gallows" aria-label="Adam asmaca çizimi"></canvas>
     <div class="lives" id="lives" aria-label="Kalan hak"></div>
+    <div class="result" id="result" aria-live="assertive"></div>
+    <div class="sig">Aybars “FEYREX”</div>
   </section>
+  </div>
 
   <div class="word" id="word" aria-hidden="true"></div>
   <div class="status" id="status" aria-live="polite"></div>
-  <div class="result" id="result" aria-live="assertive"></div>
 
   <div class="kb" id="keys" aria-label="Harfler"></div>
 
@@ -237,13 +243,11 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
       Yeni Oyun
     </button>
-    <button class="btn ghost" id="mainMenu" type="button">
+    <button class="btn ghost" id="mainMenu" type="button" aria-label="Ana menü">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-      Ana Menü
+      <span class="lbl">Ana Menü</span>
     </button>
   </div>
-
-  <footer>Aybars “FEYREX”</footer>
 </main>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -279,7 +283,7 @@ const store = {
 const els = {
   start:$('#start'), startGame:$('#startGame'), highScoreStart:$('#highScore'), highCoinStart:$('#highCoin'),
   score:$('#score'), best:$('#best'), coin:$('#coin'), word:$('#word'), status:$('#status'), result:$('#result'),
-  keys:$('#keys'), hint:$('#hintBtn'), scene:$('#scene'), lives:$('#lives'), sound:$('#soundBtn')
+  keys:$('#keys'), hint:$('#hintBtn'), scene:$('#scene'), stage:$('#stage'), lives:$('#lives'), sound:$('#soundBtn')
 };
 
 /* ================= DURUM ================= */
@@ -458,13 +462,19 @@ const W = 320, H = 340;
 const SKIN = '#f0b88c', SHIRT = '#4a74f5';
 let dpr = 1, cw = 0, sc = 1;
 
+function fitScene(){
+  const s = els.stage.getBoundingClientRect(); if (!s.width || !s.height) return;
+  const k = Math.min(s.width / W, s.height / H, 1.15);
+  els.scene.style.width = Math.floor(W * k) + 'px'; els.scene.style.height = Math.floor(H * k) + 'px';
+}
 function resizeCanvas(){
+  fitScene();
   const r = canvas.getBoundingClientRect(); if (!r.width) return;
   dpr = Math.min(window.devicePixelRatio || 1, 3); cw = r.width; sc = cw / W;
   canvas.width = Math.round(cw * dpr); canvas.height = Math.round(cw * H / W * dpr);
 }
 window.addEventListener('resize', resizeCanvas);
-if (window.ResizeObserver) new ResizeObserver(resizeCanvas).observe(canvas);
+if (window.ResizeObserver) new ResizeObserver(resizeCanvas).observe(els.stage);
 
 function shade(hex, f){
   const n = parseInt(hex.slice(1), 16);
