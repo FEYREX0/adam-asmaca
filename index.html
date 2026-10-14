@@ -91,6 +91,8 @@
   @keyframes flip{from{transform:rotateX(90deg) scale(.5);opacity:0}to{transform:none;opacity:1}}
   @keyframes tilePop{0%{transform:translateY(0)}40%{transform:translateY(-9px)}100%{transform:translateY(0)}}
 
+  .cat{padding:2px 12px;border-radius:999px;font-size:.78rem;font-weight:600;letter-spacing:.06em;color:var(--accent-l);background:rgba(124,108,255,.16);border:1px solid rgba(124,108,255,.35)}
+  .cat:empty{display:none}
   .status{min-height:22px;font-weight:600;font-size:.98rem;text-align:center;color:var(--muted);transition:color .2s}
   .status.good{color:var(--good)} .status.bad{color:var(--bad)} .status.gold{color:var(--gold)}
   .result{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);white-space:nowrap;padding:5px 14px;border-radius:14px;background:rgba(10,10,30,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-size:clamp(1.05rem,5vw,1.7rem);font-weight:700;letter-spacing:.03em;text-align:center;pointer-events:none}
@@ -229,6 +231,7 @@
   </section>
   </div>
 
+  <div class="cat" id="cat"></div>
   <div class="word" id="word" aria-hidden="true"></div>
   <div class="status" id="status" aria-live="polite"></div>
 
@@ -257,9 +260,19 @@
 'use strict';
 
 /* ================= VERİ ================= */
-const WORDS = [
-  'kalem','resim','deniz','bulut','kitap','masal','orman','sokak','yıldız','güneş','oyuncu','bilgisayar','telefon','araba','evcil','müzik','film','spor','tatil','yemek','sanat','eğitim','bilim','teknoloji','moda','hayvan','bitki','gezegen','uzay','tarih','dostluk','sevgi','mutluluk','huzur','cesaret','hayal','gerçek','macera','oyun','eğlence','dünya','kültür','sağlık','patlıcan','biber','soğan','sarımsak','havuç','patates','marul','ıspanak','lahana','bezelye','mercimek','nohut','fasulye','pirinç','buğday','mısır','arpa','yulaf','çay','kahve','süt','peynir','yumurta','ekmek','tereyağı','bal','reçel','pasta','kek','çorba','salata','köfte','pilav','döner','lahmacun'
-];
+const CATS = {
+  'Doğa': ['deniz', 'bulut', 'orman', 'yıldız', 'güneş', 'gezegen', 'uzay', 'dünya', 'bitki', 'hayvan', 'evcil'],
+  'Sebze': ['patlıcan', 'biber', 'soğan', 'sarımsak', 'havuç', 'patates', 'marul', 'ıspanak', 'lahana'],
+  'Tahıl & Bakliyat': ['bezelye', 'mercimek', 'nohut', 'fasulye', 'pirinç', 'buğday', 'mısır', 'arpa', 'yulaf'],
+  'Kahvaltı & İçecek': ['çay', 'kahve', 'süt', 'peynir', 'yumurta', 'ekmek', 'tereyağı', 'bal', 'reçel'],
+  'Yemek': ['yemek', 'pasta', 'kek', 'çorba', 'salata', 'köfte', 'pilav', 'döner', 'lahmacun'],
+  'Teknoloji': ['bilgisayar', 'telefon', 'teknoloji'],
+  'Okul & Bilim': ['kalem', 'kitap', 'eğitim', 'bilim', 'tarih', 'kültür'],
+  'Sanat & Eğlence': ['resim', 'sanat', 'müzik', 'film', 'masal', 'oyun', 'oyuncu', 'eğlence', 'spor', 'tatil', 'macera'],
+  'Duygu & Değer': ['dostluk', 'sevgi', 'mutluluk', 'huzur', 'cesaret', 'hayal', 'gerçek', 'sağlık'],
+  'Günlük Hayat': ['sokak', 'araba', 'moda']
+};
+const WORDS = Object.entries(CATS).flatMap(([c, ws]) => ws.map(w => ({ w, c })));
 // QWERTY klavye düzeni (Türkçe harfler dahil)
 const ROWS = [
   ['q','w','e','r','t','y','u','ı','o','p','ğ','ü'],
@@ -283,11 +296,11 @@ const store = {
 const els = {
   start:$('#start'), startGame:$('#startGame'), highScoreStart:$('#highScore'), highCoinStart:$('#highCoin'),
   score:$('#score'), best:$('#best'), coin:$('#coin'), word:$('#word'), status:$('#status'), result:$('#result'),
-  keys:$('#keys'), hint:$('#hintBtn'), scene:$('#scene'), stage:$('#stage'), lives:$('#lives'), sound:$('#soundBtn')
+  cat:$('#cat'), keys:$('#keys'), hint:$('#hintBtn'), scene:$('#scene'), stage:$('#stage'), lives:$('#lives'), sound:$('#soundBtn')
 };
 
 /* ================= DURUM ================= */
-let word = '', guessed = new Set(), wrong = 0, score = 0, ended = false, lost = false;
+let word = '', category = '', guessed = new Set(), wrong = 0, score = 0, ended = false, lost = false;
 let highScore = Number(store.get(K.score)) || 0;
 let coin = Number(store.get(K.coin)) || 0;
 let muted = store.get(K.sound) === '0';
@@ -390,8 +403,8 @@ function update(){
 }
 
 function newGame(){
-  let w; do { w = WORDS[Math.floor(Math.random() * WORDS.length)]; } while (w === word && WORDS.length > 1);
-  word = w; guessed = new Set(); wrong = 0; ended = false; lost = false; partP.fill(0);
+  let e; do { e = WORDS[Math.floor(Math.random() * WORDS.length)]; } while (e.w === word && WORDS.length > 1);
+  word = e.w; category = e.c; els.cat.textContent = category; guessed = new Set(); wrong = 0; ended = false; lost = false; partP.fill(0);
   showResult('', ''); setStatus('Bir harf seç!', '');
   Object.values(keyEls).forEach(b => { b.disabled = false; b.className = 'key'; });
   buildTiles(); update();
